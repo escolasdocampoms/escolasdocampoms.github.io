@@ -77,7 +77,7 @@ main{padding-block:22px 40px;display:grid;gap:22px}
 .kpi .v{font-family:var(--serif);font-size:1.65rem;color:var(--green-dk);font-variant-numeric:tabular-nums;line-height:1.15}
 .kpi .s{font-size:var(--fs-cap);color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:14px;align-items:start}
-.grid.g2{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.grid.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (max-width:900px){.grid.g2{grid-template-columns:minmax(0,1fr)}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:12px;align-content:start;min-width:0}
 .card .ch{display:grid;gap:2px;align-content:start}
@@ -177,6 +177,13 @@ tr.sel td{background:var(--green-lo)!important;font-weight:600}
 @media (max-width:820px){.kpis.k4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:400px){.kpis.k4{grid-template-columns:minmax(0,1fr)}}
 .kpis.k4 .kpi .v{font-size:1.9rem}
+.kpis.k6{grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+@media (max-width:1100px){.kpis.k6{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:600px){.kpis.k6{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpis.k4{gap:14px}
+.grid.g2 > .card:last-child .cbody{display:flex;flex-direction:column}
+.grid.g2 > .card:last-child .cbody > .bars{flex:1;align-content:space-between}
+.legend-row{column-gap:12px;row-gap:6px}
 details.more{border-top:1px dashed var(--line);padding-top:6px;align-self:end}
 details.more summary{cursor:pointer;font-size:var(--fs-cap);color:var(--green-dk);font-weight:600;list-style:none;padding:4px 0}
 details.more summary::-webkit-details-marker{display:none}
@@ -533,7 +540,7 @@ function tabVisao(rows, a) {
   const out = [];
   const scope = st.dist ? `No distrito de ${st.dist}${st.dist === st.mun ? ' (sede)' : ''}, em ${st.mun}` : st.mun ? `Em ${st.mun}` : st.cre ? `Na ${st.cre.replace(' - ', ' de ')}` : 'Em Mato Grosso do Sul';
   out.push(h('p', {class: 'take'}, `${scope}${st.loc ? ', em ' + LOC_LABEL[st.loc].toLowerCase() : ''}, `, h('b', {text: fmt(a.n)}), ` escolas do campo atendem `, h('b', {text: fmt(a.mat_bas)}), ` alunos. `, h('b', {text: pct(div(a.mat_zr_rur, a.mat_bas))}), ` deles moram na zona rural, `, h('b', {text: pct(div(a.transp_publico, a.mat_bas))}), ` usam transporte escolar e `, h('b', {text: pct(div(a.doc_bas_vinculo_contra, a.doc_bas))}), ` dos docentes são temporários.`));
-  out.push(h('div', {class: 'kpis'}, kpi('Escolas do campo', fmt(a.n), `${fmt(a.municipios)} ${a.municipios === 1 ? 'município' : 'municípios'} · ${fmt(a.distritos)} ${a.distritos === 1 ? 'distrito' : 'distritos'}`), kpi('Matrículas', fmt(a.mat_bas), `${dec(div(a.mat_bas, a.n))} por escola`), kpi('Turmas', fmt(a.tur_bas), `${dec(div(a.mat_bas, a.tur_bas))} alunos por turma`), kpi('Docentes', fmt(a.doc_bas), `${dec(div(a.mat_bas, a.doc_bas))} alunos por docente`), kpi('Alunos que moram no campo', pct(div(a.mat_zr_rur, a.mat_bas)), `${fmt(a.mat_zr_rur)} alunos`), kpi('Distância média até a sede', km(a.dist_media), `Mais distante: ${km(a.dist_max)}`)));
+  out.push(h('div', {class: 'kpis k6'}, kpi('Escolas do campo', fmt(a.n), `${fmt(a.municipios)} ${a.municipios === 1 ? 'município' : 'municípios'} · ${fmt(a.distritos)} ${a.distritos === 1 ? 'distrito' : 'distritos'}`), kpi('Matrículas', fmt(a.mat_bas), `${dec(div(a.mat_bas, a.n))} por escola`), kpi('Turmas', fmt(a.tur_bas), `${dec(div(a.mat_bas, a.tur_bas))} alunos por turma`), kpi('Docentes', fmt(a.doc_bas), `${dec(div(a.mat_bas, a.doc_bas))} alunos por docente`), kpi('Alunos que moram no campo', pct(div(a.mat_zr_rur, a.mat_bas)), `${fmt(a.mat_zr_rur)} alunos`), kpi('Distância média até a sede', km(a.dist_media), `Mais distante: ${km(a.dist_max)}`)));
   // mapa + territórios
   const mapBox = h('div', {class: 'mapbox', id: 'mapa'});
   const tog = h('div', {class: 'toggle'}, METRICS.map(([k, l]) => h('button', {type: 'button', class: 'chip', 'aria-pressed': String(st.metric === k), onclick: () => set({metric: k})}, l)));
