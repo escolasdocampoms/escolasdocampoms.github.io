@@ -73,18 +73,24 @@ main{padding-block:22px 40px;display:grid;gap:22px}
 .take b{color:var(--fg);font-weight:600}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr));gap:12px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:2px;align-content:start}
-.kpi .l{font-size:var(--fs-cap);color:var(--muted)}
+.kpi .l{font-size:var(--fs-cap);color:var(--muted);min-height:2.6em;line-height:1.3}
 .kpi .v{font-family:var(--serif);font-size:1.65rem;color:var(--green-dk);font-variant-numeric:tabular-nums;line-height:1.15}
 .kpi .s{font-size:var(--fs-cap);color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:14px;align-items:start}
 .grid.g2{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
 @media (max-width:900px){.grid.g2{grid-template-columns:minmax(0,1fr)}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:10px;align-content:start;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:12px;align-content:start;min-width:0}
+.card .ch{display:grid;gap:2px;align-content:start}
+.card .cbody{display:grid;gap:10px;align-content:start;min-width:0}
+.card .cf:empty{display:none}
+.lay > .card,.grid > .card{grid-row:span 3;grid-template-rows:subgrid;row-gap:12px}
+.lay > .card .cf:empty,.grid > .card .cf:empty{display:block}
+.grid{align-items:stretch}
 .card h3{margin:0;font-size:var(--fs-body);font-weight:700;color:var(--green-dk)}
 .card .help{margin:0;font-size:var(--fs-cap);color:var(--muted)}
 h2.sec{margin:6px 0 0;font-size:var(--fs-h);color:var(--green-dk)}
 .bars{display:grid;gap:1px}
-.bar{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(3rem,1fr) minmax(4.2rem,auto);align-items:center;gap:8px;width:100%;background:none;border:0;padding:4px 4px;font-size:var(--fs-cap);text-align:left;border-radius:6px}
+.bar{display:grid;grid-template-columns:minmax(0,46%) minmax(0,1fr) 6.4rem;align-items:center;gap:8px;width:100%;background:none;border:0;padding:4px 4px;font-size:var(--fs-cap);text-align:left;border-radius:6px}
 button.bar{cursor:pointer}
 button.bar:hover{background:var(--soft)}
 .bar[aria-pressed="true"]{background:var(--soft);font-weight:700}
@@ -160,11 +166,18 @@ tr.sel td{background:var(--green-lo)!important;font-weight:600}
 .lay{display:grid;gap:14px;align-items:stretch}
 .lay.g2e{grid-template-columns:repeat(2,minmax(0,1fr))}
 .lay.g1{grid-template-columns:minmax(0,1fr)}
+.lay.g4e{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:1150px){.lay.g4e{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:720px){.lay.g4e{grid-template-columns:minmax(0,1fr)}}
+.lay.g4e .bar,.lay.g3e .bar{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n v" "t t";row-gap:4px;padding:6px 4px}
+.lay.g4e .bar .n,.lay.g3e .bar .n{grid-area:n}
+.lay.g4e .bar .v,.lay.g3e .bar .v{grid-area:v}
+.lay.g4e .bar .t,.lay.g3e .bar .t{grid-area:t}
 .kpis.k4{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media (max-width:820px){.kpis.k4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:400px){.kpis.k4{grid-template-columns:minmax(0,1fr)}}
 .kpis.k4 .kpi .v{font-size:1.9rem}
-details.more{border-top:1px dashed var(--line);padding-top:6px}
+details.more{border-top:1px dashed var(--line);padding-top:6px;align-self:end}
 details.more summary{cursor:pointer;font-size:var(--fs-cap);color:var(--green-dk);font-weight:600;list-style:none;padding:4px 0}
 details.more summary::-webkit-details-marker{display:none}
 details.more summary::before{content:"+ "}
@@ -263,13 +276,14 @@ S.forEach((r) => {
   r.comp = (r.desktop_aluno || 0) + (r.comp_portatil_aluno || 0) + (r.tablet_aluno || 0);
   r.aee = r.aee > 0 ? 1 : 0;
   r.ppp = r.proposta_pedagogica === 1 ? 1 : 0;
+  r.reg = r.regulamentacao === 1 ? 1 : 0;
   r.multi = (r.tur_fund_ai_multietapa || 0) + (r.tur_fund_af_multi || 0);
   r.sede = r.distrito === r.municipio;
   r.mat_fund = (r.mat_fund_ai || 0) + (r.mat_fund_af || 0);
   r.tdif = r.tdi_fun == null ? 'Sem dado do fundamental' : TDIF.find(([a, b]) => r.tdi_fun >= a && r.tdi_fun < b)[2];
 });
 const REF = RAW.ref;
-const NUM = COLS.slice(14).filter((c) => !['ocupacao_predio_escolar', 'proposta_pedagogica', 'indigena_lingua', 'regulamentacao'].includes(c) && !/^(apr|rep|aba|tdi)_/.test(c)).concat(['bib', 'comp', 'ppp', 'multi']);
+const NUM = COLS.slice(14).filter((c) => !['ocupacao_predio_escolar', 'proposta_pedagogica', 'indigena_lingua', 'regulamentacao'].includes(c) && !/^(apr|rep|aba|tdi)_/.test(c)).concat(['bib', 'comp', 'ppp', 'multi', 'reg']);
 const norm = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 const LOCS = ['Assentamento', 'Terra indígena', 'Quilombo', 'Sem localização diferenciada'];
@@ -345,7 +359,11 @@ function h(tag, attrs, ...kids) {
   return e;
 }
 const kpi = (l, v, s) => h('div', {class: 'kpi'}, h('span', {class: 'l', text: l}), h('span', {class: 'v', text: v}), s ? h('span', {class: 's', text: s}) : null);
-const card = (title, help, ...body) => h('section', {class: 'card'}, h('div', null, h('h3', {text: title}), help ? h('p', {class: 'help', text: help}) : null), ...body);
+const card = (title, help, ...body) => {
+  const kids = body.flat().filter((k) => k != null && k !== false);
+  const more = kids.filter((k) => k.tagName === 'DETAILS'), main = kids.filter((k) => k.tagName !== 'DETAILS');
+  return h('section', {class: 'card'}, h('div', {class: 'ch'}, h('h3', {text: title}), help ? h('p', {class: 'help', text: help}) : null), h('div', {class: 'cbody'}, ...main), h('div', {class: 'cf'}, ...more));
+};
 function bars(items, o) {
   o = o || {};
   const max = o.max ?? Math.max(0, ...items.map((i) => i.value || 0));
@@ -507,7 +525,7 @@ function drawMap(box) {
 }
 
 // ---------- Rótulos de filtros secundários ----------
-const FALTA_LABEL = {agua_potavel: 'Sem água potável', energia_rede_publica: 'Sem energia da rede pública', internet: 'Sem internet', internet_alunos: 'Sem internet para os alunos', banda_larga: 'Sem banda larga', bib: 'Sem biblioteca ou sala de leitura', laboratorio_informatica: 'Sem laboratório de informática', laboratorio_ciencias: 'Sem laboratório de ciências', quadra_esportes: 'Sem quadra', quadra_esportes_coberta: 'Sem quadra coberta', refeitorio: 'Sem refeitório', cozinha: 'Sem cozinha', banheiro: 'Sem banheiro', banheiro_ei: 'Sem banheiro de educação infantil', banheiro_pne: 'Sem banheiro acessível', parque_infantil: 'Sem parque infantil', patio_coberto: 'Sem pátio coberto', sala_professor: 'Sem sala dos professores', sala_atendimento_especial: 'Sem sala de AEE', acessibilidade_rampas: 'Sem rampas', acessibilidade_corrimao: 'Sem corrimão', acessibilidade_pisos_tateis: 'Sem piso tátil', area_plantio: 'Sem área de plantio', viveiro: 'Sem viveiro', area_verde: 'Sem área verde', material_ped_campo: 'Sem material do campo', material_ped_agricola: 'Sem material agrícola', alimentacao: 'Sem alimentação escolar', orgao_conselho_escolar: 'Sem conselho escolar', orgao_gremio_estudantil: 'Sem grêmio estudantil', educ_ambiental: 'Sem educação ambiental', ppp: 'Sem proposta pedagógica atualizada', equip_multimidia: 'Sem projetor', computador: 'Sem computador', esgoto_rede_publica: 'Sem esgoto da rede pública', lixo_servico_coleta: 'Sem coleta de lixo', aee: 'Sem AEE', dormitorio_aluno: 'Sem dormitório para alunos'};
+const FALTA_LABEL = {agua_potavel: 'Sem água potável', energia_rede_publica: 'Sem energia da rede pública', internet: 'Sem internet', internet_alunos: 'Sem internet para os alunos', banda_larga: 'Sem banda larga', bib: 'Sem biblioteca ou sala de leitura', laboratorio_informatica: 'Sem laboratório de informática', laboratorio_ciencias: 'Sem laboratório de ciências', quadra_esportes: 'Sem quadra', quadra_esportes_coberta: 'Sem quadra coberta', refeitorio: 'Sem refeitório', cozinha: 'Sem cozinha', banheiro: 'Sem banheiro', banheiro_ei: 'Sem banheiro de educação infantil', banheiro_pne: 'Sem banheiro acessível', parque_infantil: 'Sem parque infantil', patio_coberto: 'Sem pátio coberto', sala_professor: 'Sem sala dos professores', sala_atendimento_especial: 'Sem sala de AEE', acessibilidade_rampas: 'Sem rampas', acessibilidade_corrimao: 'Sem corrimão', acessibilidade_pisos_tateis: 'Sem piso tátil', area_plantio: 'Sem área de plantio', viveiro: 'Sem viveiro', area_verde: 'Sem área verde', material_ped_campo: 'Sem material do campo', material_ped_agricola: 'Sem material agrícola', alimentacao: 'Sem alimentação escolar', orgao_conselho_escolar: 'Sem conselho escolar', orgao_gremio_estudantil: 'Sem grêmio estudantil', educ_ambiental: 'Sem educação ambiental', ppp: 'Sem proposta pedagógica atualizada', reg: 'Sem autorização do conselho de educação', equip_multimidia: 'Sem projetor', computador: 'Sem computador', esgoto_rede_publica: 'Sem esgoto da rede pública', lixo_servico_coleta: 'Sem coleta de lixo', aee: 'Sem AEE', dormitorio_aluno: 'Sem dormitório para alunos'};
 const ETAPA_LABEL = {mat_inf_cre: 'Com creche', mat_inf_pre: 'Com pré-escola', mat_fund_ai: 'Com anos iniciais', mat_fund_af: 'Com anos finais', mat_med: 'Com ensino médio', mat_eja: 'Com EJA', mat_prof: 'Com educação profissional', mat_esp: 'Com educação especial', mat_bas_int: 'Com tempo integral', mat_bas_n: 'Com turno noturno', multi: 'Com turmas multietapa ou multisseriadas', tur_fund_ai_multietapa: 'Com turmas multietapa', tur_fund_af_multi: 'Com turmas multisseriadas', prof_agricola: 'Com técnico agrícola', doc_bas_espec_campo: 'Com docente formado em Educação do Campo'};
 
 // ---------- Abas ----------
@@ -527,11 +545,14 @@ function tabVisao(rows, a) {
     bars(U.list.sort((x, y) => U.L.nome === 'CRE' ? x.key.localeCompare(y.key) : (M[2](y.a) ?? -1) - (M[2](x.a) ?? -1)).map((u) => ({key: u.key, label: u.label, value: M[2](u.a)})), {fmt: M[3], onClick: (k) => set(U.L.pick(k)), active: U.L.nome === 'Distrito' ? st.dist : null}));
   out.push(h('div', {class: 'grid g2'}, card('Mapa', helpMap, tog, leg, mapBox), terr));
   const et = [['mat_inf_cre', 'Creche'], ['mat_inf_pre', 'Pré-escola'], ['mat_fund_ai', 'Fundamental – anos iniciais'], ['mat_fund_af', 'Fundamental – anos finais'], ['mat_med', 'Ensino médio'], ['mat_eja', 'EJA'], ['mat_prof', 'Educação profissional'], ['mat_esp', 'Educação especial (inclusão)']];
-  out.push(h('div', {class: 'grid'},
-    card('Escolas que oferecem cada etapa', 'Quantas escolas têm ao menos um aluno na etapa. Clique para listar as escolas.', bars(et.map(([k, l]) => ({key: k, label: l, value: cnt(rows, (r) => (r[k] || 0) > 0)})), {onClick: (k) => set({etapa: st.etapa === k ? null : k, tab: 'escolas'}, {top: true}), active: st.etapa})),
-    card('Rede responsável', 'Quem mantém as escolas.', stack([['Municipal', 'Municipal'], ['Estadual', 'Estadual'], ['Federal', 'Federal'], ['Privada', 'Privada']].map(([k, l], i) => ({label: l, value: cnt(rows, (r) => r.rede === k), color: PAL[i]})).filter((s) => s.value))),
-    card('Tipo de localidade', 'Assentamento, terra indígena e quilombo seguem a classificação do Censo.', stack(LOCS.map((l) => ({label: LOC_LABEL[l], value: cnt(rows, (r) => r.localidade === l), color: LOC_COLOR[l]})))),
-    card('Distância até a sede do município', 'Em linha reta. Clique numa faixa para listar as escolas.', bars([...FAIXAS.map((f) => f[2]), 'Sem coordenada'].map((f) => ({key: f, label: f, value: cnt(rows, (r) => r.faixa === f), color: f === 'Sem coordenada' ? GREY : GREEN})).filter((x) => x.key !== 'Sem coordenada' || x.value), {onClick: (k) => set({faixa: st.faixa === k ? null : k, tab: 'escolas'}, {top: true}), active: st.faixa}))));
+  out.push(sec('O que é oferecido', 'As etapas de ensino que as escolas oferecem e quem é responsável por elas.',
+    g('g2e',
+      card('Escolas que oferecem cada etapa', 'Número de escolas com ao menos um aluno na etapa. Clique para listar as escolas.', countBars(et.map(([k, l]) => [l, cnt(rows, (r) => (r[k] || 0) > 0), k]), {onClick: (k) => set({etapa: st.etapa === k ? null : k, tab: 'escolas'}, {top: true}), active: st.etapa})),
+      card('Rede responsável', 'Parte das escolas.', shareBars(a.n, [['Municipal', cnt(rows, (r) => r.rede === 'Municipal')], ['Estadual', cnt(rows, (r) => r.rede === 'Estadual')], ['Federal', cnt(rows, (r) => r.rede === 'Federal')], ['Privada', cnt(rows, (r) => r.rede === 'Privada')]].filter((x) => x[1]))))));
+  out.push(sec('Território', 'Em que tipo de comunidade as escolas estão e quão longe ficam da sede do município.',
+    g('g2e',
+      card('Tipo de localidade', 'Parte das escolas. Assentamento, terra indígena e quilombo seguem a classificação do Censo.', bars(LOCS.map((l) => [l, cnt(rows, (r) => r.localidade === l)]).sort((x, y) => y[1] - x[1]).map(([l, v]) => ({key: l, label: LOC_LABEL[l], value: div(v, a.n), text: `${pct(div(v, a.n))} · ${fmt(v)}`, color: LOC_COLOR[l]})), {max: 1})),
+      card('Distância até a sede do município', 'Número de escolas, em linha reta. Clique numa faixa para listar as escolas.', countBars([...FAIXAS.map((f) => f[2]), 'Sem coordenada'].map((f) => [f, cnt(rows, (r) => r.faixa === f), f]).filter((x) => x[0] !== 'Sem coordenada' || x[1]), {onClick: (k) => set({faixa: st.faixa === k ? null : k, tab: 'escolas'}, {top: true}), active: st.faixa})))));
   return {nodes: out, after: () => drawMap(document.getElementById('mapa'))};
 }
 
@@ -556,9 +577,9 @@ function withMore(main, rest) {
 function hasBars(rows, list, o) {
   o = o || {};
   const items = list.map(([k, label, bad]) => {
-    const c = cnt(rows, (r) => r[k] === 1), v = div(c, rows.length);
-    const alert = v != null && (bad ? v > 0.5 : v < 0.5);
-    return {key: k, label, value: v, text: `${pct(v)} · ${fmt(c)}`, color: alert ? RED : GREEN, title: `${fmt(c)} de ${fmt(rows.length)} escolas` + (bad ? '' : ' · clique para ver as que não têm'), bad};
+    const c = cnt(rows, (r) => r[k] === 1), v = div(c, rows.length), info = bad === 'info';
+    const alert = !info && v != null && (bad ? v > 0.5 : v < 0.5);
+    return {key: k, label, value: v, text: `${pct(v)} · ${fmt(c)}`, color: alert ? RED : bad ? GREY : GREEN, title: `${fmt(c)} de ${fmt(rows.length)} escolas` + (bad ? '' : ' · clique para ver as que não têm'), bad};
   });
   return bars(items, {max: 1, onClick: o.click === false ? null : (k) => { const it = items.find((x) => x.key === k); if (!it.bad) goFalta(k); }, active: st.falta});
 }
@@ -570,6 +591,7 @@ const countBars = (list, o) => bars(list.map(([label, v, key]) => ({key: key || 
 // ---------- Alunos ----------
 function tabAlunos(rows, a) {
   const corND = Math.max(0, a.mat_bas - a.mat_bas_branca - a.mat_bas_preta - a.mat_bas_parda - a.mat_bas_amarela - a.mat_bas_indigena);
+  const sexoND = Math.max(0, a.mat_bas - a.mat_bas_fem - a.mat_bas_masc);
   const ET = [['mat_inf_cre', 'Creche'], ['mat_inf_pre', 'Pré-escola'], ['mat_fund_ai', 'Fundamental – anos iniciais'], ['mat_fund_af', 'Fundamental – anos finais'], ['mat_med', 'Ensino médio'], ['mat_eja', 'EJA'], ['mat_prof', 'Educação profissional']];
   const TOPL = {mat_inf_cre: 'na creche', mat_inf_pre: 'na pré-escola', mat_fund_ai: 'nos anos iniciais do fundamental', mat_fund_af: 'nos anos finais do fundamental', mat_med: 'no ensino médio', mat_eja: 'na EJA', mat_prof: 'na educação profissional'};
   const top = ET.slice().sort((x, y) => (a[y[0]] || 0) - (a[x[0]] || 0))[0];
@@ -577,55 +599,75 @@ function tabAlunos(rows, a) {
   return {nodes: [
     lead('Dos ', B(fmt(a.mat_bas)), ' alunos das escolas do campo, ', B(pct(div(a.mat_zr_rur, a.mat_bas))), ' moram na zona rural e ', B(pct(div(a.transp_publico, a.mat_bas))), ' usam transporte escolar público. A maior concentração de alunos está ', B(TOPL[top[0]]), ` (${fmt(a[top[0]])} matrículas).`),
     kpis4(kpi('Matrículas', fmt(a.mat_bas), `${dec(div(a.mat_bas, a.n))} por escola`), kpi('Moram na zona rural', pct(div(a.mat_zr_rur, a.mat_bas)), fmt(a.mat_zr_rur) + ' alunos'), kpi('Usam transporte escolar', pct(div(a.transp_publico, a.mat_bas)), fmt(a.transp_publico) + ' alunos'), kpi('Alunos indígenas', pct(div(a.mat_bas_indigena, a.mat_bas)), fmt(a.mat_bas_indigena) + ' alunos')),
-    sec('Etapas e idades', 'Em que etapa os alunos estão e quantos anos têm.',
+    sec('Etapas e idades', 'A etapa em que o aluno está e a idade dele andam juntas: os dois mostram onde se concentra a demanda.',
       g('g2e',
-        card('Matrículas por etapa', 'Clique numa etapa para listar as escolas que a oferecem.', countBars(ET.map(([k, l]) => [l, a[k], k]), {onClick: (k) => set({etapa: st.etapa === k ? null : k, tab: 'escolas'}, {top: true}), active: st.etapa})),
+        card('Matrículas por etapa', 'Número de alunos. Clique numa etapa para listar as escolas que a oferecem.', countBars(ET.map(([k, l]) => [l, a[k], k]), {onClick: (k) => set({etapa: st.etapa === k ? null : k, tab: 'escolas'}, {top: true}), active: st.etapa})),
         card('Idade dos alunos', 'Número de alunos por faixa de idade.', columns([['mat_bas_0_3', 'Até 3 anos'], ['mat_bas_4_5', '4 e 5 anos'], ['mat_bas_6_10', '6 a 10 anos'], ['mat_bas_11_14', '11 a 14 anos'], ['mat_bas_15_17', '15 a 17 anos'], ['mat_bas_18_mais', '18 anos ou mais']].map(([k, l]) => ({label: l, value: a[k]})))))),
-    sec('Quem são e como estudam', 'Como os alunos foram declarados no Censo Escolar.',
+    sec('Quem são os alunos', 'Como os alunos foram declarados no Censo Escolar.',
       g('g2e',
         card('Cor ou raça', 'Parte dos alunos em cada grupo.', shareBars(a.mat_bas, cor)),
-        card('Rotina dos alunos', 'Parte das matrículas em cada situação.', shareBars(a.mat_bas, [['Moram na zona rural', a.mat_zr_rur], ['Usam transporte escolar público', a.transp_publico], ['Estudam em tempo integral', a.mat_bas_int], ['Estudam à noite', a.mat_bas_n], ['Meninas', a.mat_bas_fem]])),
-        card('Quem paga o transporte escolar', 'Alunos que usam transporte público, pelo responsável.', shareBars(a.transp_publico, [['Prefeitura', a.transp_resp_mun], ['Estado', a.transp_resp_est]])),
-        card('Outras modalidades', 'Número de alunos.', countBars([['EJA – fundamental', a.mat_eja_fund], ['EJA – ensino médio', a.mat_eja_med], ['Educação especial (inclusão)', a.mat_esp], ['Educação profissional', a.mat_prof]]), h('p', {class: 'help', text: `${fmt(cnt(rows, (r) => r.aee === 1))} escolas oferecem Atendimento Educacional Especializado (AEE).`}))))]};
+        card('Sexo', 'Parte dos alunos em cada grupo.', shareBars(a.mat_bas, [['Feminino', a.mat_bas_fem], ['Masculino', a.mat_bas_masc], ['Não informado', sexoND]])))),
+    sec('Como chegam à escola', 'Onde os alunos moram e o transporte que os leva até a escola.',
+      g('g2e',
+        card('Onde moram e como chegam', 'Parte das matrículas.', shareBars(a.mat_bas, [['Moram na zona rural', a.mat_zr_rur], ['Moram na zona urbana', a.mat_zr_urb], ['Usam transporte escolar público', a.transp_publico]])),
+        card('Quem paga o transporte escolar', 'Parte dos alunos que usam transporte público.', shareBars(a.transp_publico, [['Prefeitura', a.transp_resp_mun], ['Estado', a.transp_resp_est]])))),
+    sec('Jornada e modalidades', 'Quanto tempo os alunos passam na escola e em que modalidade estudam.',
+      g('g2e',
+        card('Turno e jornada', 'Parte das matrículas.', shareBars(a.mat_bas, [['Diurno', a.mat_bas_d], ['Noturno', a.mat_bas_n], ['Tempo integral', a.mat_bas_int], ['A distância', a.mat_bas_ead]])),
+        card('Modalidades', `Número de alunos. ${fmt(cnt(rows, (r) => r.aee === 1))} escolas oferecem Atendimento Educacional Especializado (AEE).`, countBars([['EJA – fundamental', a.mat_eja_fund], ['EJA – ensino médio', a.mat_eja_med], ['Educação especial (inclusão)', a.mat_esp], ['Educação profissional', a.mat_prof]]))))]};
 }
 
 // ---------- Professores e gestão ----------
 function tabDocentes(rows, a) {
-  const PROF = [['Merendeiras e cozinheiros', 'prof_alimentacao'], ['Serviços gerais', 'prof_servicos_gerais'], ['Pedagogos', 'prof_pedagogia'], ['Administrativos', 'prof_administrativos'], ['Secretários escolares', 'prof_secretario'], ['Segurança e portaria', 'prof_seguranca'], ['Coordenação pedagógica', 'prof_coordenador'], ['Monitores', 'prof_monitores']];
-  const PROF2 = [['Gestão', 'prof_gestao'], ['Nutricionistas', 'prof_nutricionista'], ['Técnicos agrícolas', 'prof_agricola'], ['Bibliotecários', 'prof_bibliotecario'], ['Psicólogos', 'prof_psicologo'], ['Assistentes sociais', 'prof_assist_social'], ['Saúde', 'prof_saude'], ['Tradutores de Libras', 'prof_trad_libras']];
+  const PROF = [['Merendeiras e cozinheiros', 'prof_alimentacao'], ['Serviços gerais', 'prof_servicos_gerais'], ['Administrativos', 'prof_administrativos'], ['Secretários escolares', 'prof_secretario'], ['Segurança e portaria', 'prof_seguranca'], ['Monitores', 'prof_monitores'], ['Gestão', 'prof_gestao']];
+  const PROF2 = [['Pedagogos', 'prof_pedagogia'], ['Coordenação pedagógica', 'prof_coordenador'], ['Técnicos agrícolas', 'prof_agricola'], ['Nutricionistas', 'prof_nutricionista'], ['Bibliotecários', 'prof_bibliotecario'], ['Psicólogos', 'prof_psicologo'], ['Assistentes sociais', 'prof_assist_social'], ['Tradutores de Libras', 'prof_trad_libras']];
   const pTemp = div(a.doc_bas_vinculo_contra, a.doc_bas);
+  const sortd = (l) => l.map(([x, k]) => [x, a[k], k]).sort((p, q) => (q[1] || 0) - (p[1] || 0));
   return {nodes: [
     lead(B(pct(pTemp)), ` dos ${fmt(a.doc_bas)} docentes são temporários e só `, B(pct(div(a.doc_bas_espec_campo, a.doc_bas))), ' têm formação continuada em Educação do Campo. Há ', B(dec(div(a.mat_bas, a.doc_bas))), ' alunos por docente.'),
     kpis4(kpi('Docentes', fmt(a.doc_bas), `${dec(div(a.mat_bas, a.doc_bas))} alunos por docente`), kpi('Temporários', pct(pTemp), `${fmt(a.doc_bas_vinculo_contra)} docentes`), kpi('Com licenciatura', pct(div(a.doc_bas_esco_sup_grad_licen, a.doc_bas)), `${fmt(a.doc_bas_esco_sup_grad_licen)} docentes`), kpi('Formação em Educação do Campo', pct(div(a.doc_bas_espec_campo, a.doc_bas)), `${fmt(a.doc_bas_espec_campo)} docentes`)),
-    sec('Vínculo e formação', 'Como os docentes estão contratados e que formação têm.',
+    sec('Estabilidade da equipe', 'Contratos temporários e aposentadorias próximas indicam o risco de troca de professores.',
       g('g2e',
-        card('Vínculo de trabalho', 'Concursado é efetivo; temporário é contratado por tempo determinado. Vermelho: mais da metade é temporária.', shareBars(a.doc_bas, [['Temporários', a.doc_bas_vinculo_contra, pTemp > 0.5], ['Concursados', a.doc_bas_vinculo_concur], ['Terceirizados', a.doc_bas_vinculo_terceir], ['CLT', a.doc_bas_vinculo_clt]])),
-        card('Escolaridade', 'Um docente com pós-graduação conta também em ensino superior.', ...withMore(shareBars(a.doc_bas, [['Ensino superior', a.doc_bas_esco_sup_grad], ['Licenciatura', a.doc_bas_esco_sup_grad_licen], ['Especialização', a.doc_bas_esco_sup_pos_espec], ['Mestrado ou doutorado', a.doc_bas_esco_sup_pos_mestra + a.doc_bas_esco_sup_pos_douto]]), shareBars(a.doc_bas, [['Só ensino médio', a.doc_bas_esco_em], ['Só ensino fundamental', a.doc_bas_esco_ef], ['Mestrado', a.doc_bas_esco_sup_pos_mestra], ['Doutorado', a.doc_bas_esco_sup_pos_douto]]))),
-        card('Formação continuada', 'Cursos de 80 horas ou mais. Clique em Educação do Campo para ver as escolas com esses docentes.', ...withMore(shareBars(a.doc_bas, [['Educação do Campo', a.doc_bas_espec_campo], ['Anos iniciais', a.doc_bas_espec_anos_iniciais], ['Educação especial', a.doc_bas_espec_ed_especial], ['Nenhuma formação continuada', a.doc_bas_espec_nenhum, div(a.doc_bas_espec_nenhum, a.doc_bas) > 0.25]], {onClick: (k) => k === 'Educação do Campo' && set({etapa: 'doc_bas_espec_campo', tab: 'escolas'}, {top: true})}), shareBars(a.doc_bas, [['Educação indígena', a.doc_bas_espec_ed_indigena], ['Educação ambiental', a.doc_bas_espec_ambiental], ['Tecnologias na educação', a.doc_bas_espec_educ_tic]]))),
-        card('Perfil dos docentes', 'Parte dos docentes em cada situação.', shareBars(a.doc_bas, [['Mulheres', a.doc_bas_fem], ['Moram na zona rural', a.doc_bas_zr_rur], ['Têm 55 anos ou mais', a.doc_bas_55_59 + a.doc_bas_60_mais], ['Indígenas', a.doc_bas_indigena], ['Dão aula de língua indígena', a.doc_bas_disc_lingua_indig]])))),
-    sec('Gestão escolar', `${fmt(a.gest_bas)} gestores, sendo ${fmt(a.gest_bas_diretor)} diretores.`,
+        card('Vínculo de trabalho', 'Parte dos docentes. Vermelho: mais da metade é temporária.', shareBars(a.doc_bas, [['Temporários', a.doc_bas_vinculo_contra, pTemp > 0.5], ['Concursados', a.doc_bas_vinculo_concur], ['Terceirizados', a.doc_bas_vinculo_terceir], ['CLT', a.doc_bas_vinculo_clt]])),
+        card('Idade dos docentes', 'Número de docentes. Quem tem 55 anos ou mais está mais perto da aposentadoria.', columns([['doc_bas_0_24', 'Até 24'], ['doc_bas_25_29', '25 a 29'], ['doc_bas_30_39', '30 a 39'], ['doc_bas_40_49', '40 a 49'], ['doc_bas_50_54', '50 a 54'], ['doc_bas_55_59', '55 a 59'], ['doc_bas_60_mais', '60 ou mais']].map(([k, l]) => ({label: l, value: a[k], color: /55|60/.test(k) ? RED : GREEN})))))),
+    sec('Formação', 'A formação inicial do docente e os cursos de atualização que fez depois.',
       g('g2e',
-        card('Perfil dos gestores', 'Parte dos gestores em cada situação.', shareBars(a.gest_bas, [['Concursados', a.gest_bas_vinculo_concur], ['Mulheres', a.gest_bas_fem], ['Com especialização', a.gest_bas_esco_sup_pos_espec], ['Com formação em gestão', a.gest_bas_espec_gestao], ['Com formação em Educação do Campo', a.gest_bas_espec_campo], ['Sem formação continuada', a.gest_bas_espec_nenhum, div(a.gest_bas_espec_nenhum, a.gest_bas) > 0.25]])),
-        card('Como o gestor chegou ao cargo', null, shareBars(a.gest_bas, [['Indicação ou escolha', a.gest_bas_acesso_cargo_indic], ['Processo seletivo e nomeação', a.gest_bas_acesso_cargo_sel], ['Eleição', a.gest_bas_acesso_cargo_eleic], ['Concurso', a.gest_bas_acesso_cargo_conc], ['Processo seletivo e eleição', a.gest_bas_acesso_cargo_p_sel], ['Outro', a.gest_bas_acesso_cargo_outro]])))),
-    sec('Outros profissionais', 'Quem trabalha nas escolas além dos docentes.',
-      g('g1', card('Profissionais nas escolas', 'Número de profissionais. Clique em técnicos agrícolas para ver as escolas.', ...withMore(countBars(PROF.map(([l, k]) => [l, a[k], k]).sort((x, y) => (y[1] || 0) - (x[1] || 0))), countBars(PROF2.map(([l, k]) => [l, a[k], k]).sort((x, y) => (y[1] || 0) - (x[1] || 0)), {onClick: (k) => k === 'prof_agricola' && set({etapa: 'prof_agricola', tab: 'escolas'}, {top: true})})))))]};
+        card('Escolaridade', 'Parte dos docentes. Quem tem pós-graduação conta também em ensino superior.', ...withMore(shareBars(a.doc_bas, [['Ensino superior', a.doc_bas_esco_sup_grad], ['Licenciatura', a.doc_bas_esco_sup_grad_licen], ['Especialização', a.doc_bas_esco_sup_pos_espec], ['Mestrado ou doutorado', a.doc_bas_esco_sup_pos_mestra + a.doc_bas_esco_sup_pos_douto]]), shareBars(a.doc_bas, [['Só ensino médio', a.doc_bas_esco_em], ['Só ensino fundamental', a.doc_bas_esco_ef]]))),
+        card('Formação continuada', 'Parte dos docentes com cursos de 80 horas ou mais. Clique em Educação do Campo para ver as escolas.', ...withMore(shareBars(a.doc_bas, [['Educação do Campo', a.doc_bas_espec_campo], ['Anos iniciais', a.doc_bas_espec_anos_iniciais], ['Educação especial', a.doc_bas_espec_ed_especial], ['Nenhuma formação continuada', a.doc_bas_espec_nenhum, div(a.doc_bas_espec_nenhum, a.doc_bas) > 0.25]], {onClick: (k) => k === 'Educação do Campo' && set({etapa: 'doc_bas_espec_campo', tab: 'escolas'}, {top: true})}), shareBars(a.doc_bas, [['Educação indígena', a.doc_bas_espec_ed_indigena], ['Educação ambiental', a.doc_bas_espec_ambiental], ['Tecnologias na educação', a.doc_bas_espec_educ_tic]]))))),
+    sec('Vínculo com o campo', 'Quem são os docentes e quanto estão próximos da comunidade onde trabalham.',
+      g('g2e',
+        card('Perfil dos docentes', 'Parte dos docentes.', shareBars(a.doc_bas, [['Mulheres', a.doc_bas_fem], ['Homens', a.doc_bas_masc], ['Indígenas', a.doc_bas_indigena]])),
+        card('Proximidade com o campo', 'Parte dos docentes.', shareBars(a.doc_bas, [['Moram na zona rural', a.doc_bas_zr_rur], ['Dão aula de língua indígena', a.doc_bas_disc_lingua_indig], ['Formação em Educação do Campo', a.doc_bas_espec_campo]])))),
+    sec('Gestão escolar', `Quem dirige as escolas e como chegou ao cargo. São ${fmt(a.gest_bas)} gestores, sendo ${fmt(a.gest_bas_diretor)} diretores.`,
+      g('g2e',
+        card('Perfil dos gestores', 'Parte dos gestores.', shareBars(a.gest_bas, [['Concursados', a.gest_bas_vinculo_concur], ['Mulheres', a.gest_bas_fem], ['Com especialização', a.gest_bas_esco_sup_pos_espec], ['Com formação em gestão', a.gest_bas_espec_gestao], ['Com formação em Educação do Campo', a.gest_bas_espec_campo], ['Sem formação continuada', a.gest_bas_espec_nenhum, div(a.gest_bas_espec_nenhum, a.gest_bas) > 0.25]])),
+        card('Como o gestor chegou ao cargo', 'Parte dos gestores.', shareBars(a.gest_bas, [['Indicação ou escolha', a.gest_bas_acesso_cargo_indic], ['Processo seletivo e nomeação', a.gest_bas_acesso_cargo_sel], ['Eleição', a.gest_bas_acesso_cargo_eleic], ['Concurso', a.gest_bas_acesso_cargo_conc], ['Processo seletivo e eleição', a.gest_bas_acesso_cargo_p_sel], ['Outro', a.gest_bas_acesso_cargo_outro]])))),
+    sec('Outros profissionais', 'Quem trabalha nas escolas além dos docentes, separado entre a equipe que mantém a escola funcionando e os especialistas.',
+      g('g2e',
+        card('Equipe de apoio', 'Número de profissionais.', countBars(sortd(PROF))),
+        card('Especialistas', 'Número de profissionais. Clique em técnicos agrícolas para ver as escolas.', countBars(sortd(PROF2), {onClick: (k) => k === 'prof_agricola' && set({etapa: 'prof_agricola', tab: 'escolas'}, {top: true})}))))]};
 }
 
 // ---------- Turmas e ensino ----------
 function tabEnsino(rows, a) {
   const lingua = rows.filter((r) => r.educacao_indigena === 1);
   const nMulti = cnt(rows, (r) => r.multi > 0);
+  const la = agg(lingua);
   return {nodes: [
     lead(B(fmt(nMulti)), ` escolas (${pct(div(nMulti, a.n))}) têm turmas multietapa ou multisseriadas, somando `, B(fmt(a.multi)), ' turmas. As turmas têm em média ', B(dec(div(a.mat_bas, a.tur_bas))), ' alunos.'),
     kpis4(kpi('Turmas', fmt(a.tur_bas), `${dec(div(a.mat_bas, a.tur_bas))} alunos por turma`), kpi('Escolas com turma multi', pct(div(nMulti, a.n)), `${fmt(nMulti)} escolas`), kpi('Proposta pedagógica atualizada', pct(div(a.ppp, a.n)), `${fmt(a.ppp)} escolas`), kpi('Escolas indígenas', fmt(lingua.length), `${pct(div(lingua.length, a.n))} das escolas`)),
-    sec('Turmas', 'Multietapa junta educação infantil e fundamental; multisseriada junta anos diferentes do fundamental com um só professor.',
+    sec('Turmas', 'Quantas turmas existem e como estão organizadas. Multietapa junta educação infantil e fundamental; multisseriada junta anos diferentes do fundamental com um só professor.',
       g('g2e',
         card('Turmas por etapa', 'Número de turmas.', countBars([['Educação infantil', a.tur_inf], ['Fundamental – anos iniciais', a.tur_fund_ai], ['Fundamental – anos finais', a.tur_fund_af], ['Ensino médio', a.tur_med], ['EJA', a.tur_eja], ['Educação profissional', a.tur_prof]])),
-        card('Formas de organização', 'Número de turmas. Clique para listar as escolas.', countBars([['Multisseriadas', a.tur_fund_af_multi, 'tur_fund_af_multi'], ['Multietapa', a.tur_fund_ai_multietapa, 'tur_fund_ai_multietapa'], ['No noturno', a.tur_bas_n, 'tur_bas_n'], ['Em tempo integral', a.tur_bas_int, 'tur_bas_int'], ['Correção de fluxo', a.tur_fund_af_corrfluxo, 'x']], {onClick: (k) => (k === 'tur_fund_af_multi' || k === 'tur_fund_ai_multietapa') && set({etapa: k, tab: 'escolas'}, {top: true})})))),
-    sec('Projeto pedagógico e atendimento', 'Parte das escolas em cada situação. Clique para listar as que não têm.',
+        card('Formas de organização', 'Número de turmas. Clique em multisseriadas ou multietapa para listar as escolas.', countBars([['Multisseriadas', a.tur_fund_af_multi, 'tur_fund_af_multi'], ['Multietapa', a.tur_fund_ai_multietapa, 'tur_fund_ai_multietapa'], ['No noturno', a.tur_bas_n, 'n'], ['Em tempo integral', a.tur_bas_int, 'i'], ['Correção de fluxo', a.tur_fund_af_corrfluxo, 'c']], {onClick: (k) => (k === 'tur_fund_af_multi' || k === 'tur_fund_ai_multietapa') && set({etapa: k, tab: 'escolas'}, {top: true})})))),
+    sec('Projeto e atendimento', 'Se a escola está em dia com sua documentação e o que oferece aos alunos. Clique para listar as escolas que não têm.',
       g('g2e',
-        card('Situação da escola', null, hasBars(rows, [['ppp', 'Proposta pedagógica atualizada'], ['alimentacao', 'Alimentação escolar (PNAE)'], ['educ_ambiental', 'Educação ambiental'], ['aee', 'Atendimento Educacional Especializado'], ['orgao_conselho_escolar', 'Conselho escolar']])),
-        card('Educação escolar indígena', `${fmt(lingua.length)} escolas oferecem educação indígena. Língua em que o ensino é dado:`, lingua.length ? shareBars(lingua.length, [['Indígena e portuguesa', cnt(lingua, (r) => r.indigena_lingua === 3)], ['Só portuguesa', cnt(lingua, (r) => r.indigena_lingua === 2)], ['Só indígena', cnt(lingua, (r) => r.indigena_lingua === 1)]]) : h('p', {class: 'empty', text: 'Nenhuma escola indígena nesse recorte.'}), h('p', {class: 'help', text: `${fmt(a.tur_bas_disc_lingua_indig)} turmas têm a disciplina de língua indígena.`}))))]};
+        card('Situação legal e pedagógica', 'Parte das escolas.', hasBars(rows, [['reg', 'Autorizada pelo conselho de educação'], ['ppp', 'Proposta pedagógica atualizada']])),
+        card('Atendimentos aos alunos', 'Parte das escolas.', hasBars(rows, [['alimentacao', 'Alimentação escolar (PNAE)'], ['aee', 'Atendimento Educacional Especializado'], ['educ_ambiental', 'Educação ambiental']])))),
+    sec('Educação escolar indígena', `${fmt(lingua.length)} escolas oferecem educação indígena. À esquerda, a língua em que ensinam; à direita, o apoio que têm para isso.`,
+      g('g2e',
+        card('Língua de ensino', 'Parte das escolas indígenas.', lingua.length ? shareBars(lingua.length, [['Indígena e portuguesa', cnt(lingua, (r) => r.indigena_lingua === 3)], ['Só portuguesa', cnt(lingua, (r) => r.indigena_lingua === 2)], ['Só indígena', cnt(lingua, (r) => r.indigena_lingua === 1)]]) : h('p', {class: 'empty', text: 'Nenhuma escola indígena nesse recorte.'})),
+        card('Apoio à educação indígena', 'Nas escolas indígenas.', lingua.length ? [shareBars(lingua.length, [['Escolas com material pedagógico indígena', la.material_ped_indigena]]), countBars([['Docentes indígenas', la.doc_bas_indigena], ['Docentes que dão aula de língua indígena', la.doc_bas_disc_lingua_indig], ['Turmas com língua indígena', la.tur_bas_disc_lingua_indig]])] : h('p', {class: 'empty', text: 'Nenhuma escola indígena nesse recorte.'}))))]};
 }
 
 // ---------- Resultados ----------
@@ -645,22 +687,25 @@ function tabResultados(rows, a) {
     return card(title, help, ...parts);
   };
   const semDado = cnt(rows, (r) => r.apr_fun == null && r.apr_med == null);
-  const tops = (k) => rows.filter((r) => r[k] != null && (r.mat_fund || 0) >= 10).sort((x, y) => y[k] - x[k]).slice(0, 8);
-  const topCard = (k, title, help) => card(title, help, bars(tops(k).map((r) => ({key: r.inep, label: `${r.escola} (${r.municipio})`, value: r[k], text: pp(r[k]), color: RED})), {max: 100, onClick: (i) => set({escola: i, tab: 'escolas'}, {top: true})}));
+  const tops = (k) => rows.filter((r) => r[k] != null && (r.mat_fund || 0) >= 10).sort((x, y) => y[k] - x[k]).slice(0, 6);
   const tdi = rate(rows, 'tdi_fun'), rtdi = RF[0][1] && RF[0][1].tdi_fun, ttdi = RF[1][1] && RF[1][1].tdi_fun;
+  const ref = st.mun ? 'do município' : 'de MS';
   return {nodes: [
     lead('No fundamental, as escolas do campo têm ', B(pp(rate(rows, 'apr_fun'))), ' de aprovação e ', B(pp(tdi)), ` de distorção idade-série. Nas escolas rurais ${st.mun ? 'de ' + st.mun : 'de MS'} a distorção é de ${pp(rtdi)}; considerando todas as escolas ${st.mun ? 'do município' : 'do estado'}, é de ${pp(ttdi)}.`),
     kpis4(kpi('Aprovação no fundamental', pp(rate(rows, 'apr_fun')), `${RF[0][0]}: ${pp(RF[0][1] && RF[0][1].apr_fun)}`), kpi('Distorção idade-série no fundamental', pp(tdi), `${RF[0][0]}: ${pp(rtdi)}`), kpi('Abandono no fundamental', pp(rate(rows, 'aba_fun')), `${RF[0][0]}: ${pp(RF[0][1] && RF[0][1].aba_fun)}`), kpi('Aprovação no ensino médio', pp(rate(rows, 'apr_med')), `${RF[0][0]}: ${pp(RF[0][1] && RF[0][1].apr_med)}`)),
-    sec('Comparação com as referências', `Taxas de 2025 do INEP. Em verde, as escolas do campo; em cinza, as referências. Vermelho: mais de 1 ponto percentual pior que as escolas rurais ${st.mun ? 'do município' : 'de MS'}.`,
+    h('p', {class: 'help', style: 'margin:0', text: `Taxas de 2025 do INEP. Em verde, as escolas do campo; em cinza, as referências. Vermelho: mais de 1 ponto percentual pior que as escolas rurais ${ref}.`}),
+    sec('Rendimento no ano', 'O que aconteceu com os alunos ao fim do ano letivo: foram aprovados ou reprovados.',
       g('g2e',
-        block('apr', 'Aprovação', 'Alunos aprovados no ano. Quanto maior, melhor.', false),
-        block('tdi', 'Distorção idade-série', 'Alunos com 2 anos ou mais de atraso para a série. Quanto menor, melhor.', true),
-        block('rep', 'Reprovação', 'Alunos reprovados. Quanto menor, melhor.', true),
-        block('aba', 'Abandono', 'Alunos que deixaram a escola durante o ano. Quanto menor, melhor.', true))),
-    sec('Onde está a distorção', `${fmt(semDado)} escolas não têm taxas porque só atendem educação infantil, EJA ou educação especial.`,
+        block('apr', 'Aprovação', 'Quanto maior, melhor.', false),
+        block('rep', 'Reprovação', 'Quanto menor, melhor.', true))),
+    sec('Trajetória escolar', 'Sinais de que o aluno está ficando para trás: deixou a escola ou está atrasado para a série.',
       g('g2e',
-        card('Escolas por faixa de distorção', 'No ensino fundamental. Clique numa faixa para listar as escolas.', countBars([...TDIF.map((f) => f[2]), 'Sem dado do fundamental'].map((f) => [f, cnt(rows, (r) => r.tdif === f), f]), {onClick: (k) => set({tdif: st.tdif === k ? null : k, tab: 'escolas'}, {top: true}), active: st.tdif})),
-        topCard('tdi_fun', 'Escolas com maior distorção', 'No fundamental, entre escolas com 10 alunos ou mais. Clique para abrir a ficha.')))]};
+        block('aba', 'Abandono', 'Alunos que deixaram a escola durante o ano. Quanto menor, melhor.', true),
+        block('tdi', 'Distorção idade-série', 'Alunos com 2 anos ou mais de atraso para a série. Quanto menor, melhor.', true))),
+    sec('Onde está a distorção', `Como as escolas se distribuem e quais pedem mais atenção. ${fmt(semDado)} escolas não têm taxas porque só atendem educação infantil, EJA ou educação especial.`,
+      g('g2e',
+        card('Escolas por faixa de distorção', 'Número de escolas, no ensino fundamental. Clique numa faixa para listar as escolas.', countBars([...TDIF.map((f) => f[2]), 'Sem dado do fundamental'].map((f) => [f, cnt(rows, (r) => r.tdif === f), f]), {onClick: (k) => set({tdif: st.tdif === k ? null : k, tab: 'escolas'}, {top: true}), active: st.tdif})),
+        card('Escolas com maior distorção', 'No fundamental, entre escolas com 10 alunos ou mais. Clique para abrir a ficha.', bars(tops('tdi_fun').map((r) => ({key: r.inep, label: `${r.escola} (${r.municipio})`, value: r.tdi_fun, text: pp(r.tdi_fun), color: RED})), {max: 100, onClick: (i) => set({escola: i, tab: 'escolas'}, {top: true})}))))]};
 }
 
 // ---------- Infraestrutura ----------
@@ -672,39 +717,60 @@ function tabInfra(rows, a) {
     lead(B(pct(div(a.internet, a.n))), ' das escolas têm internet e ', B(pct(div(a.agua_potavel, a.n))), ' têm água potável. Os itens que mais faltam: só ', ...low.flatMap(([l, v], i) => [B(pct(v)), ` têm ${l}`, i < 2 ? (i === 1 ? ' e ' : ', ') : '.'])),
     kpis4(kpi('Água potável', pct(div(a.agua_potavel, a.n)), `${fmt(a.agua_potavel)} escolas`), kpi('Internet', pct(div(a.internet, a.n)), `${pct(div(a.banda_larga, a.n))} com banda larga`), kpi('Biblioteca ou sala de leitura', pct(div(a.bib, a.n)), `${fmt(a.bib)} escolas`), kpi('Computadores para alunos', fmt(a.comp), `${dec(div(a.mat_bas, a.comp))} alunos por equipamento`)),
     h('p', {class: 'help', style: 'margin:0', text: 'As barras mostram a parte das escolas que têm cada item. Vermelho: menos da metade das escolas tem. Clique num item para listar as escolas que não o têm.'}),
-    sec('Estrutura básica', null,
+    sec('Serviços básicos', 'Os quatro serviços essenciais da escola. Em cinza, as fontes usadas, que são só informação: uma escola pode ter mais de uma.',
+      g('g4e',
+        hasCard(rows, 'Água', null, [['agua_potavel', 'Água potável'], ['agua_rede_publica', 'Rede pública', 'info'], ['agua_poco_artesiano', 'Poço artesiano', 'info'], ['agua_cacimba', 'Cacimba ou poço', 'info'], ['agua_fonte_rio', 'Rio, fonte ou córrego', 'info'], ['agua_carro_pipa', 'Carro-pipa', 'info']]),
+        hasCard(rows, 'Esgoto', null, [['esgoto_fossa_septica', 'Fossa séptica', 'info'], ['esgoto_fossa_comum', 'Fossa comum', 'info'], ['esgoto_rede_publica', 'Rede pública', 'info'], ['esgoto_inexistente', 'Sem esgotamento', true]]),
+        hasCard(rows, 'Energia', null, [['energia_rede_publica', 'Rede pública'], ['energia_renovavel', 'Renovável (solar etc.)', 'info'], ['energia_gerador_fossil', 'Gerador a combustível', 'info'], ['energia_inexistente', 'Sem energia', true]]),
+        hasCard(rows, 'Lixo', null, [['lixo_servico_coleta', 'Coleta'], ['tratamento_lixo_separacao', 'Separação'], ['lixo_queima', 'Queimado', true], ['lixo_enterra', 'Enterrado', true]]))),
+    sec('Espaços da escola', 'Os ambientes onde os alunos aprendem, convivem e se alimentam.',
+      g('g3e',
+        hasCard(rows, 'Aprendizagem', null, [['bib', 'Biblioteca ou sala de leitura'], ['laboratorio_informatica', 'Lab. de informática'], ['laboratorio_ciencias', 'Lab. de ciências'], ['sala_atendimento_especial', 'Sala de AEE'], ['sala_professor', 'Sala dos professores'], ['auditorio', 'Auditório']]),
+        hasCard(rows, 'Convivência', null, [['quadra_esportes', 'Quadra de esportes'], ['quadra_esportes_coberta', 'Quadra coberta'], ['patio_coberto', 'Pátio coberto'], ['parque_infantil', 'Parque infantil'], ['terreirao', 'Terreirão']]),
+        hasCard(rows, 'Alimentação', null, [['cozinha', 'Cozinha'], ['refeitorio', 'Refeitório'], ['despensa', 'Despensa']]))),
+    sec('Acessibilidade', `Recursos para que pessoas com deficiência circulem e usem a escola. ${fmt(a.acessibilidade_inexistente)} escolas não têm nenhum recurso.`,
       g('g2e',
-        hasCard(rows, 'Água, energia e saneamento', null, [['agua_potavel', 'Água potável'], ['energia_rede_publica', 'Energia da rede pública'], ['esgoto_fossa_septica', 'Fossa séptica'], ['lixo_servico_coleta', 'Coleta de lixo'], ['banheiro', 'Banheiro'], ['cozinha', 'Cozinha']], [['agua_rede_publica', 'Água da rede pública'], ['agua_poco_artesiano', 'Poço artesiano'], ['agua_cacimba', 'Cacimba ou poço'], ['agua_fonte_rio', 'Rio, fonte ou córrego'], ['agua_carro_pipa', 'Carro-pipa'], ['energia_renovavel', 'Energia renovável'], ['energia_gerador_fossil', 'Gerador a combustível'], ['esgoto_rede_publica', 'Esgoto da rede pública'], ['lixo_queima', 'Lixo queimado', true], ['tratamento_lixo_separacao', 'Separação do lixo']]),
-        hasCard(rows, 'Espaços de aprendizagem', null, [['bib', 'Biblioteca ou sala de leitura'], ['laboratorio_informatica', 'Laboratório de informática'], ['laboratorio_ciencias', 'Laboratório de ciências'], ['quadra_esportes', 'Quadra de esportes'], ['refeitorio', 'Refeitório'], ['parque_infantil', 'Parque infantil']], [['quadra_esportes_coberta', 'Quadra coberta'], ['patio_coberto', 'Pátio coberto'], ['sala_professor', 'Sala dos professores'], ['sala_atendimento_especial', 'Sala de AEE'], ['auditorio', 'Auditório']]))),
-    sec('Acessibilidade e tecnologia', null,
+        hasCard(rows, 'Recursos de acessibilidade', null, [['acessibilidade_rampas', 'Rampas'], ['acessibilidade_vao_livre', 'Portas largas'], ['acessibilidade_corrimao', 'Corrimão'], ['acessibilidade_pisos_tateis', 'Piso tátil']]),
+        hasCard(rows, 'Banheiros', null, [['banheiro', 'Banheiro'], ['banheiro_pne', 'Banheiro acessível'], ['banheiro_ei', 'Banheiro de educação infantil'], ['banheiro_chuveiro', 'Chuveiro']]))),
+    sec('Tecnologia', `O acesso à internet e os equipamentos para usá-la. Para os alunos há ${fmt(a.desktop_aluno)} computadores de mesa, ${fmt(a.comp_portatil_aluno)} notebooks e ${fmt(a.tablet_aluno)} tablets.`,
       g('g2e',
-        hasCard(rows, 'Acessibilidade', `${fmt(a.acessibilidade_inexistente)} escolas não têm nenhum recurso de acessibilidade.`, [['banheiro_pne', 'Banheiro acessível'], ['acessibilidade_rampas', 'Rampas'], ['acessibilidade_corrimao', 'Corrimão'], ['acessibilidade_pisos_tateis', 'Piso tátil']], [['acessibilidade_vao_livre', 'Portas largas'], ['banheiro_ei', 'Banheiro de educação infantil'], ['banheiro_chuveiro', 'Chuveiro']]),
-        hasCard(rows, 'Tecnologia', `Para os alunos: ${fmt(a.desktop_aluno)} computadores de mesa, ${fmt(a.comp_portatil_aluno)} notebooks e ${fmt(a.tablet_aluno)} tablets.`, [['internet', 'Internet'], ['internet_alunos', 'Internet para os alunos'], ['banda_larga', 'Banda larga'], ['equip_multimidia', 'Projetor']], [['internet_aprendizagem', 'Internet usada nas aulas'], ['computador', 'Computador'], ['equip_tv', 'Televisão'], ['equip_lousa_digital', 'Lousa digital'], ['equip_impressora', 'Impressora'], ['equip_parabolica', 'Antena parabólica']]))),
-    sec('Prédio', null,
+        hasCard(rows, 'Conectividade', null, [['internet', 'Internet'], ['internet_alunos', 'Internet para os alunos'], ['internet_aprendizagem', 'Internet usada nas aulas'], ['banda_larga', 'Banda larga']]),
+        hasCard(rows, 'Equipamentos', null, [['computador', 'Computador'], ['equip_multimidia', 'Projetor'], ['equip_tv', 'Televisão'], ['equip_lousa_digital', 'Lousa digital']], [['equip_impressora', 'Impressora'], ['equip_parabolica', 'Antena parabólica']]))),
+    sec('Prédio', 'De quem é o prédio e situações de funcionamento que pedem atenção.',
       g('g2e',
         card('Ocupação do prédio', 'Parte das escolas.', shareBars(a.n, [['Próprio', occ(1)], ['Cedido', occ(3)], ['Alugado', occ(2)]])),
-        card('Situações que pedem atenção', 'Número de escolas.', countBars([['Sem nenhum recurso de acessibilidade', a.acessibilidade_inexistente], ['Dividem o prédio com outra escola', a.predio_compartilhado], ['Usam salas de outra escola', a.local_func_salas_outra_esc], ['Funcionam em galpão, rancho ou barracão', a.local_func_galpao]].map(([l, v]) => [l, v]), {color: RED})))) ]};
+        card('Situações que pedem atenção', 'Número de escolas.', countBars([['Dividem o prédio com outra escola', a.predio_compartilhado], ['Usam salas de outra escola', a.local_func_salas_outra_esc], ['Funcionam em galpão, rancho ou barracão', a.local_func_galpao]], {color: RED}))))]};
 }
 
 // ---------- Vida no campo ----------
 function tabCampo(rows, a) {
   return {nodes: [
-    lead(B(pct(div(a.area_plantio, a.n))), ' das escolas têm área de plantio ou horta, mas só ', B(pct(div(a.material_ped_campo, a.n))), ' usam material pedagógico do campo e ', B(pct(div(a.orgao_conselho_escolar, a.n))), ' têm conselho escolar.'),
-    kpis4(kpi('Área de plantio ou horta', pct(div(a.area_plantio, a.n)), `${fmt(a.area_plantio)} escolas`), kpi('Material pedagógico do campo', pct(div(a.material_ped_campo, a.n)), `${fmt(a.material_ped_campo)} escolas`), kpi('Docentes formados em Educação do Campo', fmt(a.doc_bas_espec_campo), `${pct(div(a.doc_bas_espec_campo, a.doc_bas))} dos docentes`), kpi('Técnicos agrícolas', fmt(a.prof_agricola), `em ${fmt(cnt(rows, (r) => (r.prof_agricola || 0) > 0))} escolas`)),
-    h('p', {class: 'help', style: 'margin:0', text: 'As barras mostram a parte das escolas que têm cada item. Vermelho: menos da metade das escolas tem. Clique num item para listar as escolas que não o têm.'}),
-    sec('Escola e território', null,
+    lead(B(pct(div(a.area_plantio, a.n))), ' das escolas têm área de plantio ou horta, mas só ', B(pct(div(a.material_ped_campo, a.n))), ' usam material pedagógico do campo e ', B(pct(div(a.doc_bas_espec_campo, a.doc_bas))), ' dos docentes têm formação em Educação do Campo.'),
+    kpis4(kpi('Área de plantio ou horta', pct(div(a.area_plantio, a.n)), `${fmt(a.area_plantio)} escolas`), kpi('Material pedagógico do campo', pct(div(a.material_ped_campo, a.n)), `${fmt(a.material_ped_campo)} escolas`), kpi('Conselho escolar', pct(div(a.orgao_conselho_escolar, a.n)), `${fmt(a.orgao_conselho_escolar)} escolas`), kpi('Técnicos agrícolas', fmt(a.prof_agricola), `em ${fmt(cnt(rows, (r) => (r.prof_agricola || 0) > 0))} escolas`)),
+    h('p', {class: 'help', style: 'margin:0', text: 'Vermelho: menos da metade das escolas (ou dos profissionais) tem o item. Clique num item de escola para listar as que não o têm.'}),
+    sec('Pedagogia do campo', 'O que a escola usa para ensinar a partir da realidade do campo e quem está preparado para isso.',
       g('g2e',
-        hasCard(rows, 'Terra, produção e ambiente', null, [['area_plantio', 'Área de plantio ou horta'], ['area_verde', 'Área verde'], ['viveiro', 'Viveiro'], ['educ_ambiental', 'Educação ambiental']], [['terreirao', 'Terreirão'], ['tratamento_lixo_separacao', 'Separação do lixo']]),
-        hasCard(rows, 'Materiais pedagógicos específicos', 'Materiais voltados à realidade do campo e dos povos tradicionais.', [['material_ped_campo', 'Educação do campo'], ['material_ped_agricola', 'Práticas agrícolas'], ['material_ped_indigena', 'Educação indígena'], ['material_ped_quilombola', 'Educação quilombola']], [['material_ped_etnico', 'Relações étnico-raciais'], ['material_ped_nenhum', 'Nenhum material específico', true]]))),
-    sec('Comunidade e permanência', null,
+        hasCard(rows, 'Materiais pedagógicos específicos', 'Parte das escolas.', [['material_ped_campo', 'Educação do campo'], ['material_ped_agricola', 'Práticas agrícolas'], ['material_ped_indigena', 'Educação indígena'], ['material_ped_quilombola', 'Educação quilombola']], [['material_ped_etnico', 'Relações étnico-raciais'], ['material_ped_nenhum', 'Nenhum material específico', true]]),
+        card('Formação para o campo', 'Parte dos docentes e dos gestores com formação continuada em Educação do Campo. Vermelho: menos da metade.', frmCampo(a)))),
+    sec('Terra e ambiente', 'O uso da terra na escola, o cuidado com o ambiente e o destino do lixo.',
+      g('g3e',
+        hasCard(rows, 'Produção', `Parte das escolas. ${fmt(a.prof_agricola)} técnicos agrícolas trabalham em ${fmt(cnt(rows, (r) => (r.prof_agricola || 0) > 0))} escolas.`, [['area_plantio', 'Área de plantio ou horta'], ['viveiro', 'Viveiro'], ['material_ped_agricola', 'Material de práticas agrícolas']]),
+        hasCard(rows, 'Ambiente', 'Parte das escolas.', [['area_verde', 'Área verde'], ['educ_ambiental', 'Educação ambiental']]),
+        hasCard(rows, 'Resíduos', 'Parte das escolas.', [['lixo_servico_coleta', 'Coleta de lixo'], ['tratamento_lixo_separacao', 'Separação do lixo'], ['lixo_queima', 'Lixo queimado', true]]))),
+    sec('Participação da comunidade', 'Como a comunidade participa da vida da escola e da escolha de quem a dirige.',
       g('g2e',
-        hasCard(rows, 'Participação da comunidade', 'Órgãos colegiados que funcionam na escola.', [['orgao_conselho_escolar', 'Conselho escolar'], ['orgao_ass_pais_mestres', 'Associação de pais e mestres'], ['orgao_gremio_estudantil', 'Grêmio estudantil'], ['redes_sociais', 'Redes sociais com a comunidade']], [['orgao_ass_pais', 'Associação de pais'], ['orgao_nenhum', 'Nenhum órgão colegiado', true]]),
-        hasCard(rows, 'Alimentação e permanência', `${fmt(a.prof_alimentacao)} merendeiras e cozinheiros trabalham nessas escolas.`, [['alimentacao', 'Alimentação escolar (PNAE)'], ['refeitorio', 'Refeitório'], ['dormitorio_aluno', 'Dormitório para alunos'], ['dormitorio_professor', 'Dormitório para professores']], [['cozinha', 'Cozinha'], ['despensa', 'Despensa']]))),
-    sec('Onde estão e como chegam', null,
+        hasCard(rows, 'Órgãos colegiados', 'Parte das escolas.', [['orgao_conselho_escolar', 'Conselho escolar'], ['orgao_ass_pais_mestres', 'Associação de pais e mestres'], ['orgao_gremio_estudantil', 'Grêmio estudantil'], ['orgao_nenhum', 'Nenhum órgão colegiado', true]]),
+        card('Escolha do diretor', 'Parte dos gestores, pelo critério de acesso ao cargo.', shareBars(a.gest_bas, [['Eleição', a.gest_bas_acesso_cargo_eleic], ['Processo seletivo e eleição', a.gest_bas_acesso_cargo_p_sel], ['Processo seletivo e nomeação', a.gest_bas_acesso_cargo_sel], ['Indicação ou escolha', a.gest_bas_acesso_cargo_indic]])))),
+    sec('Permanência na escola', 'O que ajuda o aluno a ficar o dia na escola ou a dormir nela, como na pedagogia da alternância.',
       g('g2e',
-        card('Tipo de localidade', 'Parte das escolas.', shareBars(a.n, LOCS.map((l) => [LOC_LABEL[l], cnt(rows, (r) => r.localidade === l)]).sort((x, y) => y[1] - x[1]))),
-        card('Deslocamento', `Distância média até a sede do município: ${km(a.dist_media)} em linha reta.`, shareBars(a.mat_bas, [['Alunos que moram na zona rural', a.mat_zr_rur], ['Alunos que usam transporte escolar', a.transp_publico]]), countBars([['Escolas a 50 km ou mais da sede', cnt(rows, (r) => (r.dist || 0) >= 50)]]))))]};
+        hasCard(rows, 'Alimentação', `Parte das escolas. ${fmt(a.prof_alimentacao)} merendeiras e cozinheiros trabalham nelas.`, [['alimentacao', 'Alimentação escolar (PNAE)'], ['cozinha', 'Cozinha'], ['refeitorio', 'Refeitório'], ['despensa', 'Despensa']]),
+        hasCard(rows, 'Pernoite e alternância', 'Parte das escolas.', [['dormitorio_aluno', 'Dormitório para alunos'], ['dormitorio_professor', 'Dormitório para professores'], ['banheiro_chuveiro', 'Chuveiro']]))),
+    sec('Território', 'Onde as escolas estão e quanto os alunos se deslocam até elas.',
+      g('g2e',
+        card('Tipo de localidade', 'Parte das escolas.', bars(LOCS.map((l) => [l, cnt(rows, (r) => r.localidade === l)]).sort((x, y) => y[1] - x[1]).map(([l, v]) => ({key: l, label: LOC_LABEL[l], value: div(v, a.n), text: `${pct(div(v, a.n))} · ${fmt(v)}`, color: LOC_COLOR[l]})), {max: 1})),
+        card('Deslocamento', `Parte das matrículas. Distância média até a sede do município: ${km(a.dist_media)} em linha reta.`, shareBars(a.mat_bas, [['Alunos que moram na zona rural', a.mat_zr_rur], ['Alunos que usam transporte escolar', a.transp_publico]]))))]};
 }
+const frmCampo = (a) => bars([['Docentes', div(a.doc_bas_espec_campo, a.doc_bas), a.doc_bas_espec_campo], ['Gestores', div(a.gest_bas_espec_campo, a.gest_bas), a.gest_bas_espec_campo], ['Técnicos agrícolas nas escolas (escolas com ao menos um)', null, null]].filter((x) => x[1] != null).map(([l, v, n]) => ({key: l, label: l, value: v, text: `${pct(v)} · ${fmt(n)}`, color: v != null && v < 0.5 ? RED : GREEN})), {max: 1});
 
 const CMP = [
   ['escolas', 'Escolas', (a) => a.n, fmt], ['matriculas', 'Matrículas', (a) => a.mat_bas, fmt], ['turmas', 'Turmas', (a) => a.tur_bas, fmt], ['docentes', 'Docentes', (a) => a.doc_bas, fmt],
