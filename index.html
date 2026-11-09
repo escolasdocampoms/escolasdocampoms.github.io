@@ -367,7 +367,7 @@ const shortCre = (c) => c.replace(/^CRE (\d+) - /, '$1 · ');
 const div = (a, b) => b ? a / b : null;
 
 // ---------- Estado ----------
-const TABS = [['visao', 'Visão geral'], ['alunos', 'Alunos'], ['docentes', 'Professores e gestão'], ['ensino', 'Turmas e ensino'], ['resultados', 'Resultados'], ['infra', 'Infraestrutura'], ['campo', 'Vida no campo'], ['historico', 'Histórico'], ['comparar', 'Comparar territórios'], ['escolas', 'Escolas'], ['metodo', 'Como ler']];
+const TABS = [['visao', 'Visão geral'], ['escolas', 'Escolas'], ['ensino', 'Turmas e ensino'], ['docentes', 'Professores e gestão'], ['alunos', 'Alunos'], ['infra', 'Infraestrutura'], ['campo', 'Vida no campo'], ['resultados', 'Resultados'], ['historico', 'Histórico'], ['comparar', 'Detalhamento'], ['metodo', 'Como ler']];
 const st = {cre: null, mun: null, dist: null, loc: null, rede: null, escola: null, falta: null, faixa: null, etapa: null, tdif: null, q: '', tab: 'visao', metric: 'escolas', sort: {k: 'escola', d: 1}, csort: {k: 'escolas', d: -1}};
 const h0 = location.hash.slice(1);
 if (TABS.some((t) => t[0] === h0)) st.tab = h0;
@@ -846,7 +846,7 @@ function tabCampo(rows, a) {
 }
 const frmCampo = (a) => bars([['Docentes', div(a.doc_bas_espec_campo, a.doc_bas), a.doc_bas_espec_campo], ['Gestores', div(a.gest_bas_espec_campo, a.gest_bas), a.gest_bas_espec_campo], ['Técnicos agrícolas nas escolas (escolas com ao menos um)', null, null]].filter((x) => x[1] != null).map(([l, v, n]) => ({key: l, label: l, value: v, text: `${pct(v)} · ${fmt(n)}`, color: v != null && v < 0.5 ? RED : GREEN})), {max: 1});
 
-const CMP = [
+const CMPALL = [
   ['escolas', 'Escolas', (a) => a.n, fmt], ['matriculas', 'Matrículas', (a) => a.mat_bas, fmt], ['turmas', 'Turmas', (a) => a.tur_bas, fmt], ['docentes', 'Docentes', (a) => a.doc_bas, fmt],
   ['apd', 'Alunos por docente', (a) => div(a.mat_bas, a.doc_bas), dec], ['temp', '% temporários', (a) => div(a.doc_bas_vinculo_contra, a.doc_bas), pct], ['rural', '% alunos do campo', (a) => div(a.mat_zr_rur, a.mat_bas), pct],
   ['transp', '% transporte', (a) => div(a.transp_publico, a.mat_bas), pct], ['multi', 'Turmas multi', (a) => a.multi, fmt], ['dist', 'Distância média', (a) => a.dist_media, km],
@@ -859,7 +859,11 @@ function csv(name, header, lines) {
 }
 const num = (x) => typeof x === 'number' ? (Number.isInteger(x) ? x : x.toLocaleString('pt-BR', {maximumFractionDigits: 3})) : x;
 function tabComparar() {
-  const U = units();
+  // Com um distrito escolhido, o detalhamento desce até as escolas
+  const U = st.dist
+    ? {L: {nome: 'Escola', pick: (k) => ({escola: k, tab: 'escolas'})}, list: P().map((r) => ({key: r.inep, label: r.escola, rows: [r], a: agg([r])}))}
+    : units();
+  const CMP = U.L.nome === 'Escola' ? CMPALL.filter(([k]) => k !== 'escolas') : CMPALL;
   const list = U.list.map((u) => ({...u, vals: Object.fromEntries(CMP.map(([k, , f]) => [k, f(u.a)]))}));
   const {k, d} = st.csort;
   list.sort((x, y) => k === 'nome' ? x.label.localeCompare(y.label, 'pt-BR') * d : ((x.vals[k] ?? -Infinity) - (y.vals[k] ?? -Infinity)) * d);
@@ -877,9 +881,9 @@ function tabComparar() {
   const table = h('table', null, h('thead', null, h('tr', null, th('nome', U.L.nome), CMP.map(([key, label]) => th(key, label, 'num')))),
     h('tbody', null, list.map((u) => h('tr', {class: 'click' + (U.L.nome === 'Distrito' && st.dist === u.key ? ' sel' : ''), tabindex: '0', onclick: () => set(U.L.pick(u.key)), onkeydown: (e) => { if (e.key === 'Enter') set(U.L.pick(u.key)); }}, h('td', {text: u.label}), CMP.map(([key, , , f]) => h('td', {class: 'num', style: heat(key, u.vals[key]), text: f(u.vals[key])})))),
       h('tr', null, h('td', null, h('b', {text: 'Total da seleção'})), CMP.map(([, , f, ff]) => h('td', {class: 'num'}, h('b', {text: ff(f(total))}))))));
-  const where = st.mun ? `os distritos de ${st.mun}` : st.cre ? `os municípios da ${st.cre}` : 'as 12 coordenadorias regionais';
-  return {nodes: [card(`Comparar ${where}`, `Clique numa linha para descer um nível. Clique no título de uma coluna para ordenar. ${U.L.nome === 'Distrito' ? 'O distrito com o mesmo nome do município é a sede.' : ''}`,
-    h('div', {class: 'tablebar'}, h('span', {class: 'lbl', text: `${fmt(list.length)} ${U.L.nome === 'CRE' ? 'coordenadorias' : U.L.nome === 'Município' ? 'municípios' : 'distritos'} com escolas do campo`}), h('button', {type: 'button', class: 'btn', onclick: () => csv(`comparativo_${U.L.nome.toLowerCase()}.csv`, [U.L.nome, ...CMP.map((c) => c[1])], list.map((u) => [u.label, ...CMP.map(([key]) => num(u.vals[key]))]))}, 'Baixar tabela (CSV)')),
+  const where = st.dist ? `as escolas ${st.dist === st.mun ? 'da sede de ' + st.mun : 'do distrito ' + st.dist}` : st.mun ? `os distritos de ${st.mun}` : st.cre ? `os municípios da ${st.cre}` : 'as 12 coordenadorias regionais';
+  return {nodes: [card(`Detalhamento: ${where}`, `${U.L.nome === 'Escola' ? 'Clique numa escola para abrir a ficha completa.' : U.L.nome === 'Distrito' ? 'Clique num distrito para ver as escolas dele.' : 'Clique numa linha para descer um nível.'} Clique no título de uma coluna para ordenar. ${U.L.nome === 'Distrito' ? 'O distrito com o mesmo nome do município é a sede.' : ''}`,
+    h('div', {class: 'tablebar'}, h('span', {class: 'lbl', text: U.L.nome === 'Escola' ? `${fmt(list.length)} ${list.length === 1 ? 'escola' : 'escolas'} do campo` : `${fmt(list.length)} ${U.L.nome === 'CRE' ? 'coordenadorias' : U.L.nome === 'Município' ? 'municípios' : 'distritos'} com escolas do campo`}), h('button', {type: 'button', class: 'btn', onclick: () => csv(`detalhamento_${U.L.nome.toLowerCase()}.csv`, [U.L.nome, ...CMP.map((c) => c[1])], list.map((u) => [u.label, ...CMP.map(([key]) => num(u.vals[key]))]))}, 'Baixar tabela (CSV)')),
     h('div', {class: 'tw'}, table))]};
 }
 
@@ -1031,7 +1035,7 @@ function tabMetodo() {
     ['Distância até a sede', 'Distância em linha reta entre a escola e a sede do município, calculada pelas coordenadas do INEP e do IBGE. Por estrada, a distância é maior.']];
   return {nodes: [h('section', {class: 'card method'},
     h('h3', {text: 'Como ler o painel'}),
-    h('ul', null, h('li', {text: 'Use os filtros do topo para escolher o estado, uma CRE, um município ou um distrito. Todas as abas passam a mostrar só aquele recorte.'}), h('li', {text: 'Clique nas áreas do mapa e nas barras para descer de nível ou para listar as escolas que têm (ou não têm) um item.'}), h('li', {text: 'A aba Comparar territórios coloca lado a lado as CREs, os municípios de uma CRE ou os distritos de um município, e permite baixar a tabela.'}), h('li', {text: 'Na aba Escolas, a ficha de cada escola reúne todas as informações, e o botão de download entrega a base completa em CSV, que abre no Excel.'})),
+    h('ul', null, h('li', {text: 'Use os filtros do topo para escolher o estado, uma CRE, um município ou um distrito. Todas as abas passam a mostrar só aquele recorte.'}), h('li', {text: 'Clique nas áreas do mapa e nas barras para descer de nível ou para listar as escolas que têm (ou não têm) um item.'}), h('li', {text: 'A aba Detalhamento mostra numa tabela as CREs, os municípios de uma CRE, os distritos de um município ou as escolas de um distrito, e permite baixar a tabela.'}), h('li', {text: 'Na aba Escolas, a ficha de cada escola reúne todas as informações, e o botão de download entrega a base completa em CSV, que abre no Excel.'})),
     h('h3', {text: 'Glossário'}), h('dl', null, g.flatMap(([t, d]) => [h('dt', {text: t}), h('dd', {text: d})])),
     h('h3', {text: 'Fontes e limitações'}),
     h('ul', null, h('li', {text: 'Microdados do Censo Escolar 2025 (INEP, versão 2): tabelas de escolas, matrículas, turmas, docentes e gestores. Endereço, telefone e coordenadas vêm do Catálogo de Escolas do INEP.'}), h('li', {text: 'Docentes e gestores são contados por escola: quem trabalha em duas escolas aparece nas duas, então os totais por território são um pouco maiores que o número de pessoas.'}), h('li', {text: 'Matrículas por etapa podem se sobrepor (o ensino médio integrado conta em médio e em educação profissional).'}), h('li', {text: 'Valores marcados pelo INEP como extremos (88888) foram tratados como não informados.'}), h('li', {text: 'Aprovação, reprovação, abandono e distorção idade-série vêm dos Indicadores Educacionais 2025 do INEP, por escola, município e estado. Para um grupo de escolas, a taxa é a média ponderada pelas matrículas da etapa; somadas, as 245 escolas reproduzem as taxas que o INEP publica para MS rural.'}), h('li', {text: 'O IDEB ainda não está no painel.'})))]};
