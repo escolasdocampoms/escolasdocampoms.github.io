@@ -1,6 +1,6 @@
 // Escolas do Campo MS — funciona sem internet depois da primeira visita.
 // A página é buscada na rede primeiro (para receber atualizações); sem rede, usa a cópia guardada.
-const CACHE = 'escolas-campo-v6';
+const CACHE = 'escolas-campo-v7';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-180.png', 'fonts/rawline-400.woff2', 'fonts/rawline-600.woff2', 'fonts/rawline-700.woff2', 'fonts/rawline-800.woff2', 'fonts/rawline-900.woff2',
   'https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js'];
 self.addEventListener('install', (e) => {
@@ -15,7 +15,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   const page = req.mode === 'navigate' || (url.origin === location.origin && /\/(index\.html)?$/.test(url.pathname));
   if (page) {
-    e.respondWith(fetch(req).then((r) => { const cp = r.clone(); caches.open(CACHE).then((c) => c.put('index.html', cp)); return r; })
+    e.respondWith(fetch(req, {cache: 'no-cache'}).then((r) => { const cp = r.clone(); caches.open(CACHE).then((c) => c.put('index.html', cp)); return r; })
       .catch(() => caches.match('index.html').then((r) => r || caches.match('./'))));
     return;
   }
