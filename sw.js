@@ -1,6 +1,6 @@
 // Escolas do Campo MS — funciona sem internet depois da primeira visita.
 // A página é buscada na rede primeiro (para receber atualizações); sem rede, usa a cópia guardada.
-const CACHE = 'escolas-campo-v2';
+const CACHE = 'escolas-campo-v3';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-180.png',
   'https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js'];
 self.addEventListener('install', (e) => {
