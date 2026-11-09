@@ -59,12 +59,28 @@ button{font:inherit;color:inherit}
 .tabs button{color:var(--fg);background:none;border:0;border-bottom:3px solid transparent;padding:11px 13px 8px;white-space:nowrap;cursor:pointer;font-size:1rem;font-weight:600}
 .tabsel{display:none;width:100%;margin:8px 0;font-weight:700;font-size:1rem;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--green-dk)}
 @media (max-width:1280px){.tabs button{font-size:.9375rem;padding:10px 11px 7px}}
-@media (max-width:640px){.tabs{display:none}.tabsel{display:block}.filters{position:static}}
+@media (max-width:640px){.tabs{display:none}.tabsel{display:block}}
 .tabs button:hover{background:var(--soft)}
 .tabs button[aria-selected="true"]{color:var(--green-dk);border-bottom-color:var(--green);font-weight:800}
 
 /* Filtros */
 .filters{position:sticky;top:var(--navh,0px);z-index:4;background:rgba(244,244,239,.96);backdrop-filter:blur(4px);border-bottom:1px solid var(--line);padding-block:10px}
+/* No celular os filtros viram uma linha compacta (como o menu de abas) que abre um painel */
+.fbtn{display:none}
+.fdone{display:none}
+@media (max-width:640px){
+  .filters{padding-block:8px}
+  .fbtn{display:flex;align-items:center;gap:8px;width:100%;font:inherit;font-size:.9375rem;text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--fg);cursor:pointer}
+  .fbtn b{color:var(--green-dk);font-weight:800;flex:none}
+  .fbtn span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+  .fbtn i{flex:none;font-style:normal;color:var(--green-dk);transition:transform .2s}
+  .filters.open .fbtn i{transform:rotate(180deg)}
+  .fpanel{display:none}
+  .filters.open .fpanel{display:block;max-height:calc(100vh - var(--navh,46px) - 80px);overflow:auto;padding-top:10px}
+  .fpanel .fsel{width:100%}
+  .fpanel .sep{display:none}
+  .fdone{display:block;width:100%;margin-top:10px;padding:10px;border:0;border-radius:8px;background:var(--green-dk);color:#fff;font:inherit;font-weight:800;cursor:pointer}
+}
 .frow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .fsel{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);max-width:100%;min-width:0}
 .fsel:disabled{opacity:.5}
@@ -280,8 +296,10 @@ footer .cred{color:var(--fg)}
 <nav class="navbar" aria-label="Seções do painel">
   <div class="wrap"><div class="tabs" id="tabs" role="tablist"></div><select id="tabsel" class="tabsel" aria-label="Seção do painel"></select></div>
 </nav>
-<div class="filters">
+<div class="filters" id="filters">
   <div class="wrap">
+    <button type="button" class="fbtn" id="fbtn" aria-expanded="false" aria-controls="fpanel"><b>Filtros</b><span id="fsum"></span><i aria-hidden="true">▾</i></button>
+    <div class="fpanel" id="fpanel">
     <div class="frow">
       <select id="f-cre" class="fsel" aria-label="Coordenadoria regional"></select>
       <select id="f-mun" class="fsel" aria-label="Município"></select>
@@ -292,6 +310,8 @@ footer .cred{color:var(--fg)}
       <div class="frow" id="f-rede" role="group" aria-label="Rede"></div>
     </div>
     <div class="crumbs" id="crumbs"></div>
+    <button type="button" class="fdone" id="fdone">Ver resultados</button>
+    </div>
   </div>
 </div>
 <main class="wrap" id="main"></main>
@@ -477,6 +497,9 @@ function drawFilters() {
   sec.forEach(([t, o]) => parts.push(h('button', {type: 'button', class: 'pill', onclick: () => set(o), 'aria-label': 'Tirar filtro ' + t}, t + ' ×')));
   if (st.cre || st.loc || st.rede || sec.length) parts.push(h('button', {type: 'button', class: 'pill', onclick: () => set({cre: null, mun: null, dist: null, loc: null, rede: null, falta: null, faixa: null, etapa: null, tdif: null, escola: null, q: ''})}, 'Limpar tudo'));
   cr.replaceChildren(...parts);
+  const lugar = st.dist ? (st.dist === st.mun ? st.dist + ' (sede)' : st.dist) : st.mun || (st.cre ? shortCre(st.cre) : 'Mato Grosso do Sul');
+  const extra = [st.loc && LOC_LABEL[st.loc], st.rede && (st.rede === 'Outras' ? 'Federal e privada' : st.rede)].filter(Boolean);
+  document.getElementById('fsum').textContent = [lugar, ...extra].join(' · ') + ` — ${fmt(n)} ${n === 1 ? 'escola' : 'escolas'}`;
   void all;
 }
 document.getElementById('f-cre').addEventListener('change', (e) => set({cre: e.target.value || null, escola: null}));
@@ -1081,6 +1104,12 @@ addEventListener('load', snapTop);
 window.addEventListener('hashchange', () => { const k = location.hash.slice(1); if (k !== st.tab && TABS.some((x) => x[0] === k)) { st.tab = k; render(); } });
 let t;
 window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { snapTop(); if (st.tab === 'visao') drawMap(document.getElementById('mapa')); }, 150); });
+(function () {
+  const box = document.getElementById('filters'), b = document.getElementById('fbtn');
+  const tog = (o) => { box.classList.toggle('open', o); b.setAttribute('aria-expanded', String(o)); };
+  b.onclick = () => tog(!box.classList.contains('open'));
+  document.getElementById('fdone').onclick = () => { tog(false); window.scrollTo({top: document.querySelector('.topo').offsetHeight}); };
+})();
 render();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
