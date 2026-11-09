@@ -54,14 +54,17 @@ button{font:inherit;color:inherit}
 @media (max-width:760px){.topo-in{flex-direction:column;align-items:flex-start;gap:10px}.titulo{border-left:0;padding-left:0}.marca{height:64px;margin:0}}
 
 /* Navegação */
-.navbar{background:#fff;border-bottom:1px solid var(--line)}
-.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:thin}
-.tabs button{color:var(--fg);background:none;border:0;border-bottom:3px solid transparent;padding:12px 14px 9px;white-space:nowrap;cursor:pointer;font-size:1rem;font-weight:600}
+.navbar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:6}
+.tabs{display:flex;flex-wrap:wrap;gap:0 2px}
+.tabs button{color:var(--fg);background:none;border:0;border-bottom:3px solid transparent;padding:11px 13px 8px;white-space:nowrap;cursor:pointer;font-size:1rem;font-weight:600}
+.tabsel{display:none;width:100%;margin:8px 0;font-weight:700;font-size:1rem;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--green-dk)}
+@media (max-width:1280px){.tabs button{font-size:.9375rem;padding:10px 11px 7px}}
+@media (max-width:640px){.tabs{display:none}.tabsel{display:block}.filters{position:static}}
 .tabs button:hover{background:var(--soft)}
 .tabs button[aria-selected="true"]{color:var(--green-dk);border-bottom-color:var(--green);font-weight:800}
 
 /* Filtros */
-.filters{position:sticky;top:0;z-index:4;background:rgba(244,244,239,.96);backdrop-filter:blur(4px);border-bottom:1px solid var(--line);padding-block:10px}
+.filters{position:sticky;top:var(--navh,0px);z-index:4;background:rgba(244,244,239,.96);backdrop-filter:blur(4px);border-bottom:1px solid var(--line);padding-block:10px}
 .frow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .fsel{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);max-width:100%;min-width:0}
 .fsel:disabled{opacity:.5}
@@ -253,8 +256,9 @@ button.nt:hover{border-color:var(--green)}
 .cmpgrp + .cmpgrp{padding-top:6px;border-top:1px dashed var(--line)}
 footer{background:#fff;color:var(--muted);font-size:var(--fs-cap);text-align:center}
 .assin{display:flex;justify-content:center;padding:36px 16px 28px}
-.assin img{width:min(440px,100%);height:auto;display:block}
-@media (max-width:520px){.assin img{width:min(300px,100%)}}
+.assin picture{display:block;width:min(440px,100%)}
+.assin img{width:100%;height:auto;display:block}
+@media (max-width:520px){.assin picture{width:min(300px,100%)}}
 .rodape{max-width:62rem;margin-inline:auto;padding:20px 16px 26px;display:grid;gap:8px}
 footer p{margin:0}
 footer .cred{color:var(--fg)}
@@ -274,7 +278,7 @@ footer .cred{color:var(--fg)}
   <div class="faixa" aria-hidden="true"><i></i><i></i><i></i></div>
 </header>
 <nav class="navbar" aria-label="Seções do painel">
-  <div class="wrap"><div class="tabs" id="tabs" role="tablist"></div></div>
+  <div class="wrap"><div class="tabs" id="tabs" role="tablist"></div><select id="tabsel" class="tabsel" aria-label="Seção do painel"></select></div>
 </nav>
 <div class="filters">
   <div class="wrap">
@@ -356,7 +360,9 @@ function set(o, opts) {
   if (o.dist) { const r = S.find((x) => x.municipio === (o.mun || st.mun) && x.distrito === o.dist); if (r) { st.mun = r.municipio; st.cre = r.cre; } }
   if ('tab' in o) { try { history.replaceState(null, '', '#' + o.tab); } catch (e) { /* sem histórico */ } }
   render();
-  if (opts && opts.top) window.scrollTo({top: document.querySelector('.filters').offsetTop - 4, behavior: 'smooth'});
+  const topo = document.querySelector('.topo').offsetHeight;
+  if (opts && opts.top) window.scrollTo({top: topo, behavior: 'smooth'});
+  else if (opts && opts.tab && scrollY > topo) window.scrollTo({top: topo});
 }
 const redeOk = (r) => !st.rede || (st.rede === 'Outras' ? !['Municipal', 'Estadual'].includes(r.rede) : r.rede === st.rede);
 const base = (r, ignore) => (ignore === 'cre' || !st.cre || r.cre === st.cre) && (ignore === 'cre' || ignore === 'mun' || !st.mun || r.municipio === st.mun) && (ignore === 'cre' || ignore === 'mun' || ignore === 'dist' || !st.dist || r.distrito === st.dist) && (!st.loc || r.localidade === st.loc) && redeOk(r);
@@ -478,7 +484,10 @@ document.getElementById('f-mun').addEventListener('change', (e) => set(e.target.
 document.getElementById('f-dist').addEventListener('change', (e) => set({dist: e.target.value || null, mun: st.mun, escola: null}));
 
 function drawTabs() {
-  document.getElementById('tabs').replaceChildren(...TABS.map(([k, label]) => h('button', {type: 'button', role: 'tab', 'aria-selected': String(st.tab === k), onclick: () => set({tab: k})}, label)));
+  document.getElementById('tabs').replaceChildren(...TABS.map(([k, label]) => h('button', {type: 'button', role: 'tab', 'aria-selected': String(st.tab === k), onclick: () => set({tab: k}, {tab: true})}, label)));
+  const sel = document.getElementById('tabsel');
+  sel.replaceChildren(...TABS.map(([k, label]) => new Option(label, k)));
+  sel.value = st.tab; sel.onchange = () => set({tab: sel.value}, {tab: true});
 }
 
 // ---------- Unidades territoriais (próximo nível) ----------
@@ -1016,15 +1025,18 @@ function render() {
   snapTop();
 }
 // espaço no fim da página para que o último bloco também possa encaixar logo abaixo dos filtros
+function stickH() { return [...document.querySelectorAll('.navbar, .filters')].filter((e) => getComputedStyle(e).position === 'sticky').reduce((a, e) => a + e.offsetHeight, 0); }
+function navH() { document.documentElement.style.setProperty('--navh', document.querySelector('.navbar').offsetHeight + 'px'); }
 function snapTop() {
+  navH();
   const main = document.getElementById('main'), f = document.querySelector('.filters');
   main.style.paddingBottom = '';
   if (!(innerWidth >= 900 && innerHeight >= 560)) return;
   const el = [...main.querySelectorAll(':scope > .take, :scope > .grid, :scope > .blk, :scope > .lay, :scope > section, :scope > .card')].pop();
   if (!el) return;
-  const top = el.getBoundingClientRect().top + scrollY, need = top - (f.offsetHeight + 12);
+  const top = el.getBoundingClientRect().top + scrollY, need = top - (stickH() + 12);
   const max = document.documentElement.scrollHeight - innerHeight;
-  if (need > max && el.offsetHeight <= innerHeight - f.offsetHeight - 12) main.style.paddingBottom = (parseFloat(getComputedStyle(main).paddingBottom) + need - max) + 'px';
+  if (need > max && el.offsetHeight <= innerHeight - stickH() - 12) main.style.paddingBottom = (parseFloat(getComputedStyle(main).paddingBottom) + need - max) + 'px';
 }
 addEventListener('load', snapTop);
 // Rolagem com ancoragem: ao parar de rolar, a página encaixa o bloco inteiro logo abaixo dos filtros,
@@ -1034,7 +1046,7 @@ addEventListener('load', snapTop);
   const GAP = 12, wide = () => innerWidth >= 900 && innerHeight >= 560;
   const snap = () => {
     if (busy || !wide()) return;
-    const f = document.querySelector('.filters').offsetHeight + GAP;   // altura dos filtros já presos no topo
+    const f = stickH() + GAP;   // altura da navegação e dos filtros presos no topo
     const main = document.getElementById('main');
     const tops = [...main.querySelectorAll(':scope > .take, :scope > .grid, :scope > .blk, :scope > .lay, :scope > section, :scope > .card')]
       .map((e) => e.getBoundingClientRect().top);
@@ -1043,7 +1055,7 @@ addEventListener('load', snapTop);
     const H = innerHeight - f, vb = innerHeight - GAP;
     let d = null;                                   // quanto rolar a partir da posição atual
     if (tops[0] > f + 3) {                          // ainda no cabeçalho
-      if (scrollY > 0) d = dir > 0 ? tops[0] - f : -scrollY;
+      if (scrollY > 0 && scrollY < document.querySelector('.topo').offsetHeight - 2) d = dir > 0 ? tops[0] - f : -scrollY;
     } else {
       const i = tops.findIndex((t, k) => t < f - 3 && ends[k] > f + 3);
       if (i < 0) return;                            // já está encaixado
