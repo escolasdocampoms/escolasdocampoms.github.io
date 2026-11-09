@@ -257,7 +257,11 @@ button.col:hover{background:var(--soft)}
 .aviso b{font-weight:800}
 .aviso .hach{display:inline-block;width:14px;height:12px;vertical-align:-1px;margin-right:6px;border-radius:2px;background:repeating-linear-gradient(-45deg,var(--neutral) 0 3px,#E4E4DE 3px 6px)}
 .hdelta.up{color:var(--green-dk)}.hdelta.down{color:var(--red)}
-@media (max-width:600px){.hcols .col:not(:first-child):not(:last-child) .cv{visibility:hidden}.hcols .col .cl{font-size:.65rem}}
+.hcols .col{grid-template-rows:auto minmax(0,1fr) auto auto;gap:3px}
+.hcols .col .cl{min-height:0}
+.hcols .cd{font-size:.72rem;font-weight:700;font-variant-numeric:lining-nums tabular-nums;color:var(--muted);white-space:nowrap;min-height:1.2em}
+.hcols .cd.up{color:var(--green-dk)}.hcols .cd.down{color:var(--red)}
+@media (max-width:600px){.hcols .col:not(:first-child):not(:last-child) .cv,.hcols .col:not(:last-child) .cd{visibility:hidden}.hcols .col .cl{font-size:.65rem}}
 .ntiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,10rem),1fr));gap:10px}
 .nt{display:grid;gap:2px;align-content:start;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
 .card .nt{background:var(--soft)}
@@ -966,7 +970,17 @@ function tabHistorico(rows) {
     const cls = dl && o.goodUp != null && Math.abs(dl.d) > 0.0001 ? ((dl.d > 0) === o.goodUp ? 'up' : 'down') : '';
     const helpTxt = help + (dl ? ` ${dl.a[0]} → ${dl.b[0]}: ` : '');
     const body = h('div', {class: 'hcols'}, columns(series.map(([y, v]) => ({label: String(y), value: v, color: o.rate && PANDEMIA.has(y) ? GREY : y === 2025 ? 'var(--green-dk)' : GREEN})), {fmt: o.fmt || f0}));
-    body.querySelectorAll('.col').forEach((c, i) => { if (o.rate && PANDEMIA.has(ANOS[i])) c.classList.add('pand'); if (ANOS[i] === 2025) c.classList.add('now'); });
+    body.querySelectorAll('.col').forEach((c, i) => {
+      if (o.rate && PANDEMIA.has(ANOS[i])) c.classList.add('pand'); if (ANOS[i] === 2025) c.classList.add('now');
+      // variação em relação ao ano anterior: % nas contagens; pontos percentuais nas taxas e proporções
+      const v = series[i][1], pv = i ? series[i - 1][1] : null; let txt = '', d = null;
+      if (v != null && pv != null) {
+        if (o.kind === 'pp') d = v - pv; else if (o.kind === 'share') d = (v - pv) * 100; else if (pv) d = (v - pv) / pv * 100;
+        if (d != null) { const r = Math.round(d * 10) / 10; txt = r === 0 ? '0' : `${r > 0 ? '+' : '−'}${Math.abs(r).toLocaleString('pt-BR', {maximumFractionDigits: 1})}${o.kind ? '' : '%'}`; }
+      }
+      const cls = d == null || Math.round(d * 10) === 0 || o.goodUp == null ? '' : ((d > 0) === o.goodUp ? ' up' : ' down');
+      c.append(h('span', {class: 'cd' + cls, text: txt, title: txt ? `Variação em relação a ${ANOS[i - 1]}${o.kind ? ' (pontos percentuais)' : ''}` : ''}));
+    });
     const hd = card(title, null, body);
     const p = h('p', {class: 'help'}, helpTxt, dl ? h('span', {class: 'hdelta ' + cls, text: dl.txt}) : null);
     hd.querySelector('.ch').append(p);
@@ -993,7 +1007,7 @@ function tabHistorico(rows) {
       kpi('Matrículas', em ? em.txt : '—', `${fmt(first(mat) && first(mat)[1])} → ${fmt(last(mat) && last(mat)[1])}`),
       kpi('Docentes', delta(doc) ? delta(doc).txt : '—', `${fmt(first(doc) && first(doc)[1])} → ${fmt(last(doc) && last(doc)[1])}`),
       kpi('Saíram da lista de escolas do campo', fmt(sai.length), ent.length === 1 ? '1 escola entrou' : `${fmt(ent.length)} escolas entraram`)),
-    h('p', {class: 'help', style: 'margin:0', text: 'Cada ano conta as escolas rurais em atividade naquele Censo Escolar. O último ano (2025) aparece em verde-escuro. Nas taxas, 2020 e 2021 aparecem hachurados por causa da pandemia; a explicação está no bloco de rendimento.'}),
+    h('p', {class: 'help', style: 'margin:0', text: 'Abaixo de cada ano aparece a variação em relação ao ano anterior: em % nas quantidades e em pontos percentuais nas taxas e proporções (verde quando melhorou, vermelho quando piorou). Cada ano conta as escolas rurais em atividade naquele Censo Escolar. O último ano (2025) aparece em verde-escuro. Nas taxas, 2020 e 2021 aparecem hachurados por causa da pandemia; a explicação está no bloco de rendimento.'}),
     sec('Tamanho da rede', 'Quantas escolas do campo funcionaram a cada ano e quantos alunos atenderam.',
       g('g2e', chart('Escolas do campo', 'Escolas rurais em atividade.', esc, {goodUp: true}), chart('Matrículas', 'Alunos matriculados na educação básica.', mat, {goodUp: true}))),
     sec('Equipe e turmas', 'O tamanho da equipe docente e das turmas ao longo do tempo.',
